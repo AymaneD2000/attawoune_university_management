@@ -1,0 +1,43 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Tool-specific directories
+.claude/
+.kiro/
+.zencoder/
+.zenflow/
+.zenmode/
+.hypothesis/
+
+# Backend (Django)
+backend/venv/
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/db.sqlite3
+backend/media/
+backend/static/
+backend/.pytest_cache/
+
+# Frontend (React)
+frontend/node_modules/
+frontend/build/
+frontend/coverage/
+frontend/.pnp/
+frontend/.pnp.js
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*

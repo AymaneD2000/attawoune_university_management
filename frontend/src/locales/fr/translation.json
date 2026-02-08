@@ -1,0 +1,710 @@
+{
+    "sidebar": {
+        "dashboard": "Tableau de Bord",
+        "structure": "Structure",
+        "faculties": "Facultés",
+        "departments": "Départements",
+        "programs": "Filières",
+        "classrooms": "Salles",
+        "levels": "Niveaux",
+        "academics": "Scolarité",
+        "students": "Étudiants",
+        "teachers": "Enseignants",
+        "courses": "Cours",
+        "exams": "Examens",
+        "transcripts": "Bulletins",
+        "finance": "Finance",
+        "overview": "Vue d'ensemble",
+        "payments": "Paiements",
+        "salaries": "Salaires",
+        "expenses": "Dépenses",
+        "scheduling": "Emploi du Temps",
+        "planning": "Plannings",
+        "settings": "Paramètres",
+        "users": "Utilisateurs",
+        "profile": "Profil"
+    },
+    "common": {
+        "logout": "Déconnexion",
+        "search": "Rechercher...",
+        "language": "Langue",
+        "user_manual": "Manuel",
+        "actions": "Actions",
+        "prev": "Précédent",
+        "next": "Suivant",
+        "showing": "Affichage de {{current}} sur {{total}}",
+        "active": "Actif",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "saving": "Enregistrement...",
+        "close": "Fermer",
+        "loading": "Chargement...",
+        "success": "Succès",
+        "error": "Erreur",
+        "no_data": "Aucune donnée disponible",
+        "all": "Tous"
+    },
+    "dashboard": {
+        "welcome": {
+            "morning": "Bonjour",
+            "afternoon": "Bon après-midi",
+            "evening": "Bonsoir"
+        },
+        "subtitle": "Voici un aperçu de votre espace • {{date}}",
+        "stats": {
+            "students_enrolled": "Étudiants inscrits",
+            "teachers": "Enseignants",
+            "programs": "Filières / Programmes",
+            "revenue": "Revenus collectés",
+            "my_courses": "Mes cours",
+            "pending_grades": "Notes en attente",
+            "gpa": "Moyenne générale",
+            "credits_validated": "Crédits validés",
+            "courses_enrolled": "Cours inscrits"
+        },
+        "sections": {
+            "recent_inscriptions": "Inscriptions récentes",
+            "recent_payments": "Paiements récents",
+            "todays_schedule": "Emploi du temps d'aujourd'hui",
+            "recent_grades": "Dernières notes",
+            "view_all": "Voir tout",
+            "no_inscriptions": "Aucune inscription récente",
+            "no_payments": "Aucun paiement récent",
+            "no_schedule": "Aucun cours aujourd'hui",
+            "no_grades": "Aucune note récente"
+        }
+    },
+    "students": {
+        "title": "Gestion des Étudiants",
+        "subtitle": "{{count}} étudiants au total",
+        "actions": {
+            "download_cards": "Télécharger Cartes",
+            "new_student": "Nouvel Étudiant"
+        },
+        "search_placeholder": "Rechercher par nom, matricule, email...",
+        "filters": {
+            "all_status": "Tous les statuts",
+            "active": "Actif",
+            "graduated": "Diplômé",
+            "suspended": "Suspendu",
+            "dropped": "Abandonné"
+        },
+        "table": {
+            "student": "Étudiant",
+            "program": "Programme",
+            "level": "Niveau",
+            "status": "Statut",
+            "actions": "Actions"
+        },
+        "empty": {
+            "title": "Aucun étudiant trouvé",
+            "subtitle": "Essayez de modifier vos critères de recherche"
+        }
+    },
+    "teachers": {
+        "title": "Gestion des Enseignants",
+        "subtitle": "Gérer le corps professoral et leurs affectations",
+        "actions": {
+            "new_teacher": "Nouvel Enseignant",
+            "edit": "Modifier",
+            "view": "Voir"
+        },
+        "search_placeholder": "Rechercher un enseignant...",
+        "filters": {
+            "all_ranks": "Tous les grades",
+            "assistant": "Assistant",
+            "lecturer": "Maître assistant",
+            "senior_lecturer": "Maître de conférences",
+            "associate_professor": "Professeur associé",
+            "professor": "Professeur"
+        },
+        "tabs": {
+            "info": "Informations",
+            "courses": "Cours",
+            "schedule": "Emploi du temps"
+        },
+        "details": {
+            "email": "Email",
+            "department": "Département",
+            "specialization": "Spécialisation",
+            "contract_type": "Type de contrat",
+            "hire_date": "Date d'embauche",
+            "status": "Statut",
+            "active": "Actif",
+            "inactive": "Inactif"
+        },
+        "empty": "Aucun enseignant trouvé"
+    },
+    "courses": {
+        "title": "Gestion des Cours",
+        "actions": {
+            "new_course": "Nouveau Cours",
+            "edit": "Modifier",
+            "delete": "Supprimer"
+        },
+        "stats": {
+            "total": "Total des cours",
+            "required": "Cours obligatoires",
+            "elective": "Cours optionnels",
+            "practical": "Travaux pratiques"
+        },
+        "search_placeholder": "Rechercher un cours...",
+        "filters": {
+            "all_programs": "Tous les programmes",
+            "all_types": "Tous les types",
+            "required": "Obligatoire",
+            "elective": "Optionnel",
+            "practical": "TP"
+        },
+        "table": {
+            "code": "Code",
+            "name": "Nom du cours",
+            "program": "Programme",
+            "level": "Niveau",
+            "sem": "Sem.",
+            "type": "Type",
+            "credits": "Crédits",
+            "hours": "Heures",
+            "coef": "Coef.",
+            "actions": "Actions"
+        },
+        "empty": "Aucun cours trouvé"
+    },
+    "grades": {
+        "title_final": "Notes finales des étudiants",
+        "title_evaluation": "Notes par évaluation",
+        "entry_title": "Saisie des notes",
+        "labels": {
+            "course": "Cours",
+            "semester": "Semestre",
+            "eval_type": "Type d'évaluation",
+            "search_student": "Rechercher étudiant",
+            "view_mode": "Affichage"
+        },
+        "placeholders": {
+            "select_course": "Sélectionner un cours",
+            "select_semester": "Sélectionner un semestre",
+            "student_search": "Nom ou matricule..."
+        },
+        "buttons": {
+            "enter_grades": "Saisir les notes",
+            "calculate_final": "Calculer les notes finales",
+            "final_grades": "Notes finales",
+            "by_evaluation": "Par évaluation",
+            "clear_filter": "Effacer filtre",
+            "import_excel": "Importer Excel",
+            "export_excel": "Exporter Excel",
+            "view_history": "Voir historique",
+            "generate": "Générer"
+        },
+        "table": {
+            "matricule": "Matricule",
+            "student": "Étudiant",
+            "name": "Nom",
+            "score": "Note",
+            "absent": "Absent",
+            "remarks": "Remarques",
+            "mention": "Mention",
+            "status": "Statut",
+            "bulletin": "Bulletin",
+            "course": "Cours",
+            "coef": "Coeff",
+            "credits": "Crédits",
+            "eval_breakdown": "Détails Évaluations",
+            "average": "Moyenne",
+            "stats": "Stats",
+            "rank": "Rang",
+            "decision": "Décision"
+        },
+        "mentions": {
+            "excellent": "Excellent",
+            "very_good": "Très bien",
+            "good": "Bien",
+            "fair": "Assez bien",
+            "pass": "Passable",
+            "poor": "Médiocre",
+            "fail": "Nul"
+        },
+        "eval_types": {
+            "midterm": "Partiel",
+            "final": "Examen Final",
+            "quiz": "Quiz / Devoir",
+            "practical": "TP noté",
+            "project": "Projet",
+            "oral": "Oral",
+            "resit": "Rattrapage"
+        },
+        "empty": "Sélectionnez un cours et un semestre pour voir les notes",
+        "import": {
+            "title": "Importer des notes",
+            "instructions": "Téléchargez le modèle Excel, remplissez les notes et importez-le ici.",
+            "download_template": "Télécharger le modèle",
+            "select_file": "Sélectionner le fichier Excel",
+            "btn_import": "Importer",
+            "created": "Créés",
+            "updated": "Mis à jour",
+            "errors": "Erreurs rencontrées"
+        },
+        "history": {
+            "title": "Relevé de notes détaillé",
+            "avg": "Moyenne",
+            "exams": "Examens",
+            "absences": "Absences",
+            "best": "Meilleure note",
+            "no_data": "Aucune donnée trouvée"
+        },
+        "errors": {
+            "select_exam_for_import": "Veuillez d'abord sélectionner un examen existant dans le formulaire de saisie pour importer des notes.",
+            "select_exam_for_export": "Veuillez d'abord sélectionner un examen existant (via Saisir les notes)"
+        }
+    },
+    "deliberation": {
+        "title": "Délibération Annuelle",
+        "labels": {
+            "academic_year": "Année Académique",
+            "program": "Programme"
+        },
+        "button": {
+            "start": "Lancer la délibération",
+            "processing": "Traitement en cours..."
+        },
+        "results": {
+            "title": "Résultats",
+            "table": {
+                "matricule": "Matricule",
+                "student": "Étudiant",
+                "annual_average": "Moyenne Annuelle",
+                "decision": "Décision",
+                "info": "Info"
+            }
+        }
+    },
+    "scheduling": {
+        "title": "Emploi du Temps",
+        "week_days": {
+            "monday": "Lundi",
+            "tuesday": "Mardi",
+            "wednesday": "Mercredi",
+            "thursday": "Jeudi",
+            "friday": "Vendredi",
+            "saturday": "Samedi",
+            "sunday": "Dimanche"
+        },
+        "views": {
+            "week": "Semaine",
+            "list": "Liste"
+        },
+        "filters": {
+            "semester": "Semestre",
+            "program": "Programme",
+            "teacher": "Enseignant",
+            "select_semester": "Sélectionner un semestre",
+            "all_programs": "Tous les programmes",
+            "all_teachers": "Tous les enseignants",
+            "reset": "Réinitialiser"
+        },
+        "actions": {
+            "add_slot": "Ajouter un créneau",
+            "export_pdf": "Exporter PDF"
+        },
+        "modal": {
+            "title": "Ajouter un créneau",
+            "course": "Cours",
+            "classroom": "Salle",
+            "day": "Jour",
+            "start_time": "Heure début",
+            "end_time": "Heure fin",
+            "active": "Actif",
+            "cancel": "Annuler",
+            "add": "Ajouter"
+        },
+        "empty": {
+            "no_course": "Aucun cours",
+            "no_course_found": "Aucun cours trouvé pour les filtres sélectionnés."
+        }
+    },
+    "announcements": {
+        "title": "Annonces",
+        "actions": {
+            "new": "Nouvelle Annonce",
+            "edit": "Modifier",
+            "delete": "Supprimer"
+        },
+        "filters": {
+            "all_types": "Tous les types",
+            "all_audiences": "Tous les publics"
+        },
+        "types": {
+            "general": "Général",
+            "academic": "Académique",
+            "financial": "Financier",
+            "exam": "Examens",
+            "event": "Événement"
+        },
+        "audiences": {
+            "all": "Tous",
+            "students": "Étudiants",
+            "teachers": "Enseignants",
+            "staff": "Personnel"
+        },
+        "badges": {
+            "published": "Publié",
+            "draft": "Brouillon",
+            "pinned": "Épinglé"
+        },
+        "modal": {
+            "title_new": "Nouvelle Annonce",
+            "title_edit": "Modifier l'annonce",
+            "form": {
+                "title": "Titre",
+                "content": "Contenu",
+                "type": "Type",
+                "audience": "Public cible",
+                "faculty": "Faculté (optionnel)",
+                "program": "Programme (optionnel)",
+                "pin": "Épingler l'annonce",
+                "publish": "Publier immédiatement",
+                "cancel": "Annuler",
+                "save": "Enregistrer",
+                "update": "Mettre à jour"
+            }
+        },
+        "empty": "Aucune annonce trouvée"
+    },
+    "finance": {
+        "title": "Gestion Financière",
+        "subtitle": "Suivi des revenus et dépenses",
+        "tabs": {
+            "dashboard": "Tableau de bord",
+            "payments": "Paiements",
+            "salaries": "Salaires",
+            "expenses": "Dépenses",
+            "recovery": "Recouvrement"
+        },
+        "dashboard": {
+            "annual": "Annuel",
+            "collected_revenue": "Revenus collectés",
+            "total_expenses": "Dépenses totales",
+            "expected_revenue": "Revenu Global Attendu",
+            "salaries_paid": "Salaires versés",
+            "outstanding": "Reste à recouvrer",
+            "financial_balance": "Bilan Financier",
+            "net_balance": "Solde Net (Revenus - Salaires - Dépenses)"
+        },
+        "payments": {
+            "title": "Historique des paiements",
+            "new": "Nouveau Paiement",
+            "table": {
+                "reference": "Référence",
+                "student": "Étudiant",
+                "amount": "Montant",
+                "method": "Méthode",
+                "date": "Date",
+                "status": "Statut",
+                "actions": "Actions",
+                "validate": "Valider"
+            }
+        },
+        "salaries": {
+            "title": "Salaires employés",
+            "new": "Nouveau Salaire",
+            "table": {
+                "employee": "Employé",
+                "period": "Période",
+                "base": "Base",
+                "bonuses": "Primes",
+                "deductions": "Déductions",
+                "net": "Net",
+                "pay": "Payer"
+            }
+        },
+        "expenses": {
+            "title": "Dépenses et Factures",
+            "new": "Nouvelle Dépense",
+            "table": {
+                "date": "Date",
+                "category": "Catégorie",
+                "description": "Description",
+                "amount": "Montant"
+            }
+        },
+        "recovery": {
+            "title": "Suivi du Recouvrement (Étudiants)",
+            "table": {
+                "total_due": "Total Dû",
+                "paid": "Payé",
+                "remaining": "Reste",
+                "status": "Statut",
+                "unpaid": "Impayé"
+            }
+        },
+        "modals": {
+            "payment": {
+                "title": "Nouveau Paiement",
+                "method": "Méthode de Paiement",
+                "financial_situation": "Situation Financière",
+                "program_cost": "Coût Programme",
+                "already_paid": "Déjà Payé",
+                "remaining": "Reste à Payer",
+                "pay_balance": "Payer le solde"
+            },
+            "salary": {
+                "title": "Nouveau Salaire",
+                "base_salary": "Salaire de base",
+                "remarks": "Remarques"
+            },
+            "expense": {
+                "title": "Nouvelle Dépense"
+            }
+        }
+    },
+    "structure": {
+        "faculties": {
+            "title": "Facultés",
+            "subtitle": "Gérer les facultés de l'université",
+            "actions": {
+                "new": "Nouvelle Faculté"
+            },
+            "search_placeholder": "Rechercher une faculté...",
+            "table": {
+                "code": "Code",
+                "name": "Nom",
+                "description": "Description",
+                "departments": "Départements",
+                "actions": "Actions"
+            },
+            "modal": {
+                "title_new": "Nouvelle faculté",
+                "title_edit": "Modifier la faculté",
+                "name": "Nom",
+                "code": "Code",
+                "description": "Description",
+                "cancel": "Annuler",
+                "create": "Créer",
+                "update": "Mettre à jour"
+            }
+        },
+        "departments": {
+            "title": "Départements",
+            "subtitle": "Gérer les départements par faculté",
+            "actions": {
+                "new": "Nouveau Département"
+            },
+            "search_placeholder": "Rechercher un département...",
+            "filters": {
+                "all_faculties": "Toutes les facultés",
+                "select_faculty": "Sélectionner une faculté"
+            },
+            "table": {
+                "code": "Code",
+                "name": "Nom",
+                "faculty": "Faculté",
+                "stats": "Stats",
+                "actions": "Actions"
+            },
+            "modal": {
+                "title_new": "Nouveau département",
+                "title_edit": "Modifier le département",
+                "faculty": "Faculté",
+                "name": "Nom",
+                "code": "Code",
+                "description": "Description",
+                "cancel": "Annuler",
+                "create": "Créer",
+                "update": "Mettre à jour"
+            }
+        },
+        "programs": {
+            "title": "Programmes (Filières)",
+            "subtitle": "Gérer les programmes académiques",
+            "actions": {
+                "new": "Nouveau Programme"
+            },
+            "search_placeholder": "Rechercher un programme...",
+            "filters": {
+                "all_departments": "Tous les départements",
+                "select_department": "Sélectionner un département"
+            },
+            "table": {
+                "code": "Code",
+                "name": "Nom",
+                "department": "Département",
+                "level": "Niveau",
+                "students": "Étudiants",
+                "actions": "Actions"
+            },
+            "modal": {
+                "title_new": "Nouveau programme",
+                "title_edit": "Modifier le programme",
+                "department": "Département",
+                "levels": "Niveaux (Maintenir Ctrl/Cmd pour sélectionner plusieurs)",
+                "name": "Nom du programme",
+                "code": "Code",
+                "duration": "Durée (années)",
+                "tuition": "Frais de scolarité",
+                "description": "Description",
+                "cancel": "Annuler",
+                "create": "Créer",
+                "update": "Mettre à jour"
+            }
+        },
+        "classrooms": {
+            "title": "Salles de cours",
+            "subtitle": "Gérer les salles et leur disponibilité",
+            "actions": {
+                "new": "Nouvelle Salle"
+            },
+            "search_placeholder": "Rechercher une salle...",
+            "table": {
+                "room": "Salle",
+                "name": "Nom",
+                "code": "Code",
+                "building": "Bâtiment",
+                "capacity": "Capacité",
+                "equipment": "Équipements",
+                "status": "Statut",
+                "actions": "Actions"
+            },
+            "features": {
+                "projector": "Projecteur",
+                "computers": "Ordinateurs",
+                "available": "Disponible",
+                "occupied": "Occupée"
+            },
+            "modal": {
+                "title_new": "Nouvelle salle",
+                "title_edit": "Modifier la salle",
+                "code": "Code salle",
+                "name": "Nom",
+                "building": "Bâtiment",
+                "capacity": "Capacité",
+                "has_projector": "Projecteur vidéo",
+                "has_computers": "Équipé d'ordinateurs",
+                "is_available": "Salle disponible",
+                "cancel": "Annuler",
+                "create": "Créer",
+                "update": "Mettre à jour"
+            },
+            "availability": {
+                "title": "Disponibilité",
+                "date": "Date",
+                "time": "Heure",
+                "check": "Vérifier"
+            }
+        },
+        "levels": {
+            "title": "Gestion des Niveaux",
+            "subtitle": "Configurez les niveaux d'études (Licence, Master, Doctorat)",
+            "actions": {
+                "new": "Nouveau Niveau"
+            },
+            "empty": "Aucun niveau configuré.",
+            "card": {
+                "order": "Ordre"
+            },
+            "modal": {
+                "title_new": "Nouveau niveau",
+                "title_edit": "Modifier le niveau",
+                "name": "Niveau",
+                "order": "Ordre",
+                "order_hint": "Utilisé pour le tri (ex: L1=1, L2=2...)",
+                "cancel": "Annuler",
+                "save": "Enregistrer",
+                "saving": "Enregistrement..."
+            }
+        },
+        "academic_years": {
+            "title": "Années Académiques",
+            "subtitle": "Gérer le calendrier académique",
+            "actions": {
+                "new": "Nouvelle Année",
+                "manage": "Gérer / Modifier",
+                "set_current": "Définir courant"
+            },
+            "status": {
+                "current": "En cours"
+            },
+            "modal": {
+                "title_new": "Nouvelle année académique",
+                "title_edit": "Gérer l'année académique",
+                "details_title": "Détails de l'année",
+                "name": "Nom",
+                "name_placeholder": "Ex: 2025-2026",
+                "start_date": "Date début",
+                "end_date": "Date fin",
+                "create": "Créer l'année",
+                "update": "Enregistrer les modifications",
+                "semesters_title": "Semestres",
+                "add_semester": "Ajouter un semestre",
+                "no_semesters": "Aucun semestre configuré"
+            },
+            "semesters_table": {
+                "type": "Type",
+                "dates": "Dates",
+                "status": "Statut"
+            },
+            "semester_modal": {
+                "title": "Ajouter un semestre",
+                "type": "Type",
+                "start_date": "Date début",
+                "end_date": "Date fin",
+                "cancel": "Annuler",
+                "add": "Ajouter"
+            }
+        }
+    },
+    "admin": {
+        "users": {
+            "title": "Gestion des Utilisateurs",
+            "subtitle": "Gérer les comptes utilisateurs et les permissions",
+            "actions": {
+                "new": "Nouvel Utilisateur"
+            },
+            "table": {
+                "user": "Utilisateur",
+                "role": "Rôle",
+                "status": "Statut",
+                "actions": "Actions"
+            },
+            "filters": {
+                "all_roles": "Tous les rôles"
+            },
+            "modal": {
+                "title_new": "Nouvel utilisateur",
+                "title_edit": "Modifier l'utilisateur",
+                "title_password": "Changer le mot de passe",
+                "username": "Nom d'utilisateur",
+                "email": "Email",
+                "first_name": "Prénom",
+                "last_name": "Nom",
+                "role": "Rôle",
+                "password": "Mot de passe",
+                "password_confirm": "Confirmer le mot de passe",
+                "old_password": "Ancien mot de passe",
+                "new_password": "Nouveau mot de passe",
+                "new_password_confirm": "Confirmer le nouveau mot de passe",
+                "phone": "Téléphone",
+                "address": "Adresse",
+                "gender": "Genre",
+                "date_of_birth": "Date de naissance",
+                "is_active": "Sous tension / Actif",
+                "cancel": "Annuler",
+                "create": "Créer l'utilisateur",
+                "update": "Mettre à jour",
+                "change_password": "Changer le mot de passe"
+            },
+            "roles": {
+                "ADMIN": "Administrateur",
+                "DEAN": "Doyen",
+                "TEACHER": "Enseignant",
+                "STUDENT": "Étudiant",
+                "ACCOUNTANT": "Comptable",
+                "SECRETARY": "Secrétaire"
+            },
+            "gender": {
+                "M": "Homme",
+                "F": "Femme"
+            }
+        }
+    }
+}
