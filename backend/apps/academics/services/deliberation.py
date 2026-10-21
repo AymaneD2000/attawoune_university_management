@@ -1,9 +1,9 @@
 from decimal import Decimal
 from django.db import transaction
-from django.db.models import Sum, F, Avg
-from apps.students.models import Student, StudentPromotion, Enrollment
-from apps.academics.models import CourseGrade, ReportCard
-from apps.university.models import AcademicYear, Level
+
+from apps.academics.models import ReportCard
+from apps.students.models import StudentPromotion
+from apps.university.models import Level
 
 class DeliberationService:
     @staticmethod
@@ -44,7 +44,7 @@ class DeliberationService:
         if report_s1:
             total_points += report_s1.gpa * report_s1.total_credits
             total_credits += report_s1.total_credits
-        
+
         if report_s2:
             total_points += report_s2.gpa * report_s2.total_credits
             total_credits += report_s2.total_credits
@@ -55,12 +55,12 @@ class DeliberationService:
         # Rule: GPA >= 10 => PROMOTED, else REPEATED
         if annual_gpa >= 10:
             decision = StudentPromotion.PromotionDecision.PROMOTED
-            
+
             # Determine next level
             current_level_order = student.current_level.order
             next_level = Level.objects.filter(order=current_level_order + 1).first()
-            level_to = next_level if next_level else student.current_level 
-            
+            level_to = next_level if next_level else student.current_level
+
             if not next_level:
                 remarks = "Fin de cycle - Diplômable"
             else:
@@ -72,6 +72,12 @@ class DeliberationService:
             remarks = "Redoublement"
 
         # 4. Save Promotion Record
+        #
+        # Deliberation is display-only by design: it records the decision
+        # (promoted / repeated) and the grades. It never creates data in
+        # another academic year — every year's data stays independent.
+        # Transferring students to the next year happens manually through
+        # the re-inscription flow (students.views.reinscription).
         with transaction.atomic():
             promotion, created = StudentPromotion.objects.update_or_create(
                 student=student,
@@ -82,8 +88,7 @@ class DeliberationService:
                     'level_to': level_to,
                     'annual_gpa': annual_gpa,
                     'decision': decision,
-                    'remarks': remarks
                 }
             )
-            
+
         return promotion

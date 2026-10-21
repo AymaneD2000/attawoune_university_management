@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from decimal import Decimal
 from .models import Course, Exam, Grade, CourseGrade, ReportCard
 
@@ -25,7 +26,8 @@ class CourseListSerializer(serializers.ModelSerializer):
             'id', 'code', 'name', 'program', 'program_name', 'program_code',
             'course_type', 'course_type_display', 'credits', 'coefficient',
             'semester_type', 'semester_type_display', 'level', 'level_display',
-            'total_hours', 'is_active'
+            'hours_lecture', 'hours_tutorial', 'hours_practical',
+            'total_hours', 'description', 'is_active'
         ]
 
 
@@ -57,13 +59,13 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         model = Course
         fields = '__all__'
     
-    def get_exams_count(self, obj):
+    def get_exams_count(self, obj) -> int:
         return obj.exams.count()
     
-    def get_students_count(self, obj):
+    def get_students_count(self, obj) -> int:
         return obj.program.students.filter(status='ACTIVE').count()
     
-    def get_prerequisites_count(self, obj):
+    def get_prerequisites_count(self, obj) -> int:
         return obj.prerequisites.count()
 
 
@@ -158,7 +160,7 @@ class ExamDetailSerializer(serializers.ModelSerializer):
         model = Exam
         fields = '__all__'
     
-    def get_grades_count(self, obj):
+    def get_grades_count(self, obj) -> int:
         return obj.grades.count()
 
 
@@ -223,6 +225,20 @@ class GradeListSerializer(serializers.ModelSerializer):
     exam_type_display = serializers.CharField(
         source='exam.get_exam_type_display', read_only=True
     )
+    exam_type = serializers.CharField(source='exam.exam_type', read_only=True)
+    exam_date = serializers.DateField(source='exam.date', read_only=True)
+    max_score = serializers.DecimalField(
+        source='exam.max_score', max_digits=5, decimal_places=2, read_only=True
+    )
+    exam_weight = serializers.DecimalField(
+        source='exam.weight', max_digits=3, decimal_places=2, read_only=True
+    )
+    academic_year_name = serializers.CharField(
+        source='exam.semester.academic_year.name', read_only=True
+    )
+    semester_name = serializers.CharField(
+        source='exam.semester.get_semester_type_display', read_only=True
+    )
     graded_by_name = serializers.CharField(
         source='graded_by.get_full_name', read_only=True
     )
@@ -235,7 +251,9 @@ class GradeListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'student', 'student_name', 'student_matricule', 'exam',
             'exam_info', 'course_name', 'course_code', 'exam_type_display',
-            'score', 'percentage', 'is_absent', 'graded_by', 'graded_by_name',
+            'exam_type', 'exam_date', 'max_score', 'exam_weight',
+            'academic_year_name', 'semester_name',
+            'score', 'percentage', 'is_absent', 'remarks', 'graded_by', 'graded_by_name',
             'graded_at'
         ]
 
@@ -362,7 +380,7 @@ class CourseGradeListSerializer(serializers.ModelSerializer):
             'id', 'student', 'student_name', 'student_matricule', 'course',
             'course_name', 'course_code', 'semester', 'semester_name',
             'final_score', 'grade_letter', 'is_validated', 'validated_by',
-            'validated_by_name', 'validated_at'
+            'validated_by_name', 'validated_at', 'is_published', 'published_at'
         ]
 
 
@@ -404,8 +422,7 @@ class CourseGradeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseGrade
         fields = [
-            'student', 'course', 'semester', 'final_score', 'is_validated',
-            'validated_by'
+            'student', 'course', 'semester', 'final_score'
         ]
         # Remove default unique_together validator to use custom validation
         validators = []
@@ -503,14 +520,18 @@ class ReportCardDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportCard
         fields = '__all__'
+        read_only_fields = [
+            'gpa', 'total_credits', 'credits_earned', 'rank',
+            'is_published', 'published_at', 'generated_by', 'generated_at',
+        ]
     
-    def get_course_grades_count(self, obj):
+    def get_course_grades_count(self, obj) -> int:
         return CourseGrade.objects.filter(
             student=obj.student,
             semester=obj.semester
         ).count()
 
-    def get_rank(self, obj):
+    def get_rank(self, obj) -> int:
         if obj.rank:
             return obj.rank
         
@@ -527,10 +548,12 @@ class ReportCardDetailSerializer(serializers.ModelSerializer):
             rank += 1
         return rank
 
-    def get_courses(self, obj):
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
+    def get_courses(self, obj) -> list[dict[str, object]]:
         course_grades = CourseGrade.objects.filter(
             student=obj.student,
-            semester=obj.semester
+            semester=obj.semester,
+            is_validated=True,
         ).select_related('course')
         
         result = []

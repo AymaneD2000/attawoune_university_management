@@ -9,17 +9,29 @@ This module provides ViewSets for managing academic data:
 - ReportCard: Semester report cards with GPA and credits
 """
 
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, inline_serializer
 from apps.core.permissions import IsAdminOrReadOnly, IsTeacherOrAdmin, IsSecretaryOrAdmin
 from .models import Course, Exam, Grade, CourseGrade, ReportCard
 from django.db import transaction
-from django.db.models import Sum, Avg, Max, Min, Q
 from django.http import HttpResponse
 from .utils import export_grades_template, export_current_grades
+from .services.grades import (
+    delete_course_grade,
+    delete_grade,
+    ensure_academic_year_open,
+    ensure_course_access,
+    recalculate_course_grade,
+    save_course_grade,
+    save_grade,
+    set_course_grades_published,
+    unvalidate_course_grade,
+    validate_course_grade,
+)
 import openpyxl
 from .serializers import (
     CourseListSerializer, CourseDetailSerializer, CourseCreateSerializer,
@@ -105,7 +117,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.role in ['ADMIN', 'SECRETARY']:
+        if user.role in ['ADMIN', 'SECRETARY', 'DEAN']:
             return self.queryset
         elif user.role == 'TEACHER':
             # Teachers can see courses they teach
@@ -195,7 +207,7 @@ class CourseViewSet(viewsets.ModelViewSet):
                 'course_name': prereq.name,
                 'course_code': prereq.code,
                 'is_completed': is_completed,
-                'grade': course_grade.final_grade if course_grade else None,
+                'grade': course_grade.final_score if course_grade else None,
             })
         
         return Response({
@@ -330,7 +342,7 @@ class ExamViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.role == 'ADMIN':
+        if user.role in ['ADMIN', 'DEAN', 'SECRETARY']:
             return self.queryset
         elif user.role == 'TEACHER':
             # Teachers can see exams for their courses
@@ -412,7 +424,7 @@ class GradeViewSet(viewsets.ModelViewSet):
         - Read operations: All authenticated users (with role-based filtering)
         - Write operations: Teachers and Admin only
         """
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'student_history']:
             return [IsAuthenticated()]
         return [IsAuthenticated(), IsTeacherOrAdmin()]
     
@@ -427,7 +439,7 @@ class GradeViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.role == 'ADMIN':
+        if user.role in ['ADMIN', 'DEAN', 'SECRETARY']:
             return self.queryset
         elif user.role == 'TEACHER':
             # Teachers can see grades for their courses
@@ -445,51 +457,27 @@ class GradeViewSet(viewsets.ModelViewSet):
         """
         Automatically set graded_by to current user.
         Validate that teacher is assigned to the course.
+        Block writes to inactive academic years.
         """
-        # Validate teacher assignment if user is a teacher
-        if self.request.user.role == 'TEACHER':
-            exam = serializer.validated_data.get('exam')
-            if exam:
-                # Check if teacher is assigned to this course
-                from apps.teachers.models import TeacherCourse
-                is_assigned = TeacherCourse.objects.filter(
-                    teacher__user=self.request.user,
-                    course=exam.course,
-                    semester=exam.semester
-                ).exists()
-                
-                if not is_assigned:
-                    from rest_framework.exceptions import PermissionDenied
-                    raise PermissionDenied(
-                        "Vous n'êtes pas assigné à ce cours pour ce semestre."
-                    )
-        
-        serializer.save(graded_by=self.request.user)
+        serializer.instance = save_grade(
+            actor=self.request.user,
+            validated_data=serializer.validated_data,
+        )
     
     def perform_update(self, serializer):
         """
         Automatically update graded_by to current user.
         Validate that teacher is assigned to the course.
+        Block writes to inactive academic years.
         """
-        # Validate teacher assignment if user is a teacher
-        if self.request.user.role == 'TEACHER':
-            exam = serializer.validated_data.get('exam') or serializer.instance.exam
-            if exam:
-                # Check if teacher is assigned to this course
-                from apps.teachers.models import TeacherCourse
-                is_assigned = TeacherCourse.objects.filter(
-                    teacher__user=self.request.user,
-                    course=exam.course,
-                    semester=exam.semester
-                ).exists()
-                
-                if not is_assigned:
-                    from rest_framework.exceptions import PermissionDenied
-                    raise PermissionDenied(
-                        "Vous n'êtes pas assigné à ce cours pour ce semestre."
-                    )
-        
-        serializer.save(graded_by=self.request.user)
+        serializer.instance = save_grade(
+            actor=self.request.user,
+            validated_data=serializer.validated_data,
+            instance=serializer.instance,
+        )
+
+    def perform_destroy(self, instance):
+        delete_grade(actor=self.request.user, grade=instance)
     
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, IsTeacherOrAdmin])
     def bulk_create(self, request):
@@ -517,29 +505,19 @@ class GradeViewSet(viewsets.ModelViewSet):
         errors = []
         
         for grade_data in grades_data:
-            serializer = GradeCreateSerializer(data=grade_data)
+            serializer = GradeCreateSerializer(data=grade_data, context={'request': request})
             
             if serializer.is_valid():
-                # Validate teacher assignment if user is a teacher
-                if request.user.role == 'TEACHER':
-                    exam = serializer.validated_data.get('exam')
-                    if exam:
-                        from apps.teachers.models import TeacherCourse
-                        is_assigned = TeacherCourse.objects.filter(
-                            teacher__user=request.user,
-                            course=exam.course,
-                            semester=exam.semester
-                        ).exists()
-                        
-                        if not is_assigned:
-                            errors.append({
-                                "data": grade_data,
-                                "error": "Vous n'êtes pas assigné à ce cours"
-                            })
-                            continue
-                
-                serializer.save(graded_by=request.user)
-                created.append(serializer.data)
+                try:
+                    serializer.instance = save_grade(
+                        actor=request.user,
+                        validated_data=serializer.validated_data,
+                    )
+                    created.append(serializer.data)
+                except Exception as exc:
+                    if not hasattr(exc, 'detail'):
+                        raise
+                    errors.append({"data": grade_data, "errors": exc.detail})
             else:
                 errors.append({
                     "data": grade_data,
@@ -563,6 +541,8 @@ class GradeViewSet(viewsets.ModelViewSet):
             exam = Exam.objects.select_related('course', 'course__program').get(id=exam_id)
         except Exam.DoesNotExist:
             return Response({"error": "Examen non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+
+        ensure_course_access(request.user, exam.course, exam.semester)
 
         # Get students enrolled in the program
         from apps.students.models import Student
@@ -589,6 +569,8 @@ class GradeViewSet(viewsets.ModelViewSet):
             exam = Exam.objects.get(id=exam_id)
         except Exam.DoesNotExist:
             return Response({"error": "Examen non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+
+        ensure_course_access(request.user, exam.course, exam.semester)
 
         grades = Grade.objects.filter(exam_id=exam_id).select_related('student', 'student__user', 'graded_by')
         serializer = GradeListSerializer(grades, many=True)
@@ -617,11 +599,8 @@ class GradeViewSet(viewsets.ModelViewSet):
         except Exam.DoesNotExist:
             return Response({"error": "Examen non trouvé"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Validate teacher access
-        if request.user.role == 'TEACHER':
-            from apps.teachers.models import TeacherCourse
-            if not TeacherCourse.objects.filter(teacher__user=request.user, course=exam.course, semester=exam.semester).exists():
-                return Response({"error": "Vous n'êtes pas assigné à ce cours"}, status=status.HTTP_403_FORBIDDEN)
+        ensure_course_access(request.user, exam.course, exam.semester)
+        ensure_academic_year_open(exam.semester)
 
         try:
             wb = openpyxl.load_workbook(file_obj, data_only=True)
@@ -659,16 +638,22 @@ class GradeViewSet(viewsets.ModelViewSet):
                                 results['errors'].append(f"Ligne {row_idx}: Format de note invalide: {score_val}")
                                 continue
                         
-                        grade, created = Grade.objects.update_or_create(
+                        existing_grade = Grade.objects.filter(
                             student=student,
                             exam=exam,
-                            defaults={
+                        ).first()
+                        grade = save_grade(
+                            actor=request.user,
+                            instance=existing_grade,
+                            validated_data={
+                                'student': student,
+                                'exam': exam,
                                 'score': score,
                                 'is_absent': is_absent,
                                 'remarks': str(remarks or ""),
-                                'graded_by': request.user
-                            }
+                            },
                         )
+                        created = existing_grade is None
                         
                         if created:
                             results['created'] += 1
@@ -693,6 +678,8 @@ class GradeViewSet(viewsets.ModelViewSet):
 
         # Check permissions
         user = request.user
+        if user.role == 'ACCOUNTANT':
+            return Response({"error": "Non autorisé"}, status=status.HTTP_403_FORBIDDEN)
         if user.role == 'STUDENT':
             # A student can only see their own history
             from apps.students.models import Student
@@ -703,26 +690,60 @@ class GradeViewSet(viewsets.ModelViewSet):
             except Student.DoesNotExist:
                 return Response({"error": "Profil étudiant non trouvé"}, status=status.HTTP_404_NOT_FOUND)
 
-        grades = Grade.objects.filter(student_id=student_id).select_related(
+        grades = list(self.get_queryset().filter(student_id=student_id).select_related(
             'exam', 'exam__course', 'exam__semester', 'exam__semester__academic_year'
-        ).order_by('-exam__date')
+        ).order_by('exam__date', 'graded_at'))
 
         serializer = GradeListSerializer(grades, many=True)
-        
-        # Calculate some stats
-        stats = grades.aggregate(
-            avg_score=Avg('score'),
-            max_score=Max('score'),
-            min_score=Min('score'),
-            total_exams=Sum(Q(score__isnull=False)), # This is a bit weird, aggregate doesn't work like this for count
-        )
-        # Fix total count
-        stats['total_exams'] = grades.count()
-        stats['absences'] = grades.filter(is_absent=True).count()
+
+        scored_grades = [grade for grade in grades if not grade.is_absent]
+        normalized_scores = [float(grade.percentage) / 5 for grade in scored_grades]
+        percentages = [float(grade.percentage) for grade in scored_grades]
+
+        def average(values):
+            return round(sum(values) / len(values), 2) if values else 0
+
+        first_window = normalized_scores[:3]
+        last_window = normalized_scores[-3:]
+        stats = {
+            'avg_score': average(normalized_scores),
+            'avg_percentage': average(percentages),
+            'max_score': round(max(normalized_scores), 2) if normalized_scores else 0,
+            'min_score': round(min(normalized_scores), 2) if normalized_scores else 0,
+            'total_exams': len(grades),
+            'absences': len([grade for grade in grades if grade.is_absent]),
+            'pass_rate': round(
+                len([value for value in percentages if value >= 50]) / len(percentages) * 100,
+                1,
+            ) if percentages else 0,
+            'trend_delta': round(average(last_window) - average(first_window), 2)
+            if len(normalized_scores) > 1 else 0,
+        }
+
+        type_buckets = {}
+        for grade in scored_grades:
+            exam_type = grade.exam.exam_type
+            bucket = type_buckets.setdefault(exam_type, {
+                'type': exam_type,
+                'label': grade.exam.get_exam_type_display(),
+                'scores': [],
+            })
+            bucket['scores'].append(float(grade.percentage) / 5)
+
+        type_breakdown = [
+            {
+                'type': bucket['type'],
+                'label': bucket['label'],
+                'count': len(bucket['scores']),
+                'average_score': average(bucket['scores']),
+            }
+            for bucket in type_buckets.values()
+        ]
 
         return Response({
             'grades': serializer.data,
-            'stats': stats
+            'stats': stats,
+            'type_breakdown': type_breakdown,
         })
 
 
@@ -807,7 +828,7 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.role == 'ADMIN':
+        if user.role in ['ADMIN', 'DEAN', 'SECRETARY']:
             return self.queryset
         elif user.role == 'TEACHER':
             # Teachers can see course grades for their courses
@@ -819,6 +840,22 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
             return self.queryset.filter(student__user=user)
         
         return self.queryset.none()
+
+    def perform_create(self, serializer):
+        serializer.instance = save_course_grade(
+            actor=self.request.user,
+            validated_data=serializer.validated_data,
+        )
+
+    def perform_update(self, serializer):
+        serializer.instance = save_course_grade(
+            actor=self.request.user,
+            validated_data=serializer.validated_data,
+            instance=serializer.instance,
+        )
+
+    def perform_destroy(self, instance):
+        delete_course_grade(actor=self.request.user, course_grade=instance)
     
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, IsTeacherOrAdmin])
     def calculate_final_grades(self, request):
@@ -829,9 +866,8 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
         Normalized Score = (Grade / Max Score) * 20
         Final Grade = Sum(Normalized Score * Exam Weight) / Sum(Exam Weights)
         """
-        from decimal import Decimal
         from apps.students.models import Enrollment
-        from apps.academics.models import Exam, Grade
+        from apps.university.models import Semester
         
         course_id = request.data.get('course_id')
         semester_id = request.data.get('semester_id')
@@ -842,28 +878,19 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
             
-        # Validate teacher permissions
-        if request.user.role == 'TEACHER':
-            from apps.teachers.models import TeacherCourse
-            if not TeacherCourse.objects.filter(
-                teacher__user=request.user,
-                course_id=course_id,
-                semester_id=semester_id
-            ).exists():
-                return Response(
-                    {"error": "Vous n'êtes pas assigné à ce cours"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-
-        # Get all students enrolled in this course (via program) and active
-        # Actually we should look for students who have grades OR are enrolled.
-        # Let's rely on Enrollments matching the course's program.
-        
         try:
             course = Course.objects.get(id=course_id)
         except Course.DoesNotExist:
             return Response({"error": "Cours non trouvé"}, status=status.HTTP_404_NOT_FOUND)
-            
+
+        try:
+            semester = Semester.objects.select_related('academic_year').get(id=semester_id)
+        except Semester.DoesNotExist:
+            return Response({"error": "Semestre non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+
+        ensure_course_access(request.user, course, semester)
+        ensure_academic_year_open(semester)
+
         # Get exams for this course and semester
         exams = Exam.objects.filter(course_id=course_id, semester_id=semester_id)
         if not exams.exists():
@@ -872,14 +899,10 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
             
-        # Map exams by ID for easy access
-        exam_map = {e.id: e for e in exams}
-        
-        # Get students
         enrollments = Enrollment.objects.filter(
             program=course.program,
-            academic_year__semesters__id=semester_id, # Link enrollment to semester's year
-            status='ACTIVE'
+            academic_year=semester.academic_year,
+            is_active=True,
         ).select_related('student').distinct()
         
         updated_count = 0
@@ -887,47 +910,11 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
         
         for enrollment in enrollments:
             student = enrollment.student
-            
-            # Get grades for this student and these exams
-            grades = Grade.objects.filter(student=student, exam__in=exams)
-            
-            if not grades.exists():
+
+            if not Grade.objects.filter(student=student, exam__in=exams).exists():
                 continue
-                
-            total_weighted_user_score = Decimal('0.00')
-            total_weight = Decimal('0.00')
-            
-            for grade in grades:
-                exam = exam_map[grade.exam_id]
-                
-                # Normalize score to 20
-                if exam.max_score > 0:
-                    normalized_score = (grade.score / exam.max_score) * 20
-                else:
-                    normalized_score = Decimal('0.00')
-                    
-                total_weighted_user_score += normalized_score * exam.weight
-                total_weight += exam.weight
-            
-            if total_weight > 0:
-                final_score = total_weighted_user_score / total_weight
-            else:
-                final_score = Decimal('0.00')
-                
-            # Round to 2 decimal places
-            final_score = final_score.quantize(Decimal('0.01'))
-            
-            # Create or update CourseGrade
-            obj, created = CourseGrade.objects.update_or_create(
-                student=student,
-                course=course,
-                semester_id=semester_id,
-                defaults={
-                    'final_score': final_score,
-                    'is_validated': False # Reset validation on recalculation? Yes, safer.
-                }
-            )
-            
+
+            _, created = recalculate_course_grade(student, course, semester)
             if created:
                 created_count += 1
             else:
@@ -939,31 +926,30 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
             "updated": updated_count
         })
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsTeacherOrAdmin])
+    def validate(self, request, pk=None):
         """
         Validate a course grade.
-        
+
         Sets is_validated=True, records validated_by and validated_at.
         """
-        from django.utils import timezone
-        
         course_grade = self.get_object()
-        
-        # Check if already validated
-        if course_grade.is_validated:
-            return Response(
-                {"message": "Cette note est déjà validée"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        course_grade.is_validated = True
-        course_grade.validated_by = request.user
-        course_grade.validated_at = timezone.now()
-        course_grade.save()
-        
+        course_grade = validate_course_grade(actor=request.user, course_grade=course_grade)
         serializer = CourseGradeDetailSerializer(course_grade)
         return Response({
             "message": "Note validée avec succès",
             "course_grade": serializer.data
+        })
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsTeacherOrAdmin])
+    def unvalidate(self, request, pk=None):
+        course_grade = unvalidate_course_grade(
+            actor=request.user,
+            course_grade=self.get_object(),
+        )
+        return Response({
+            "message": "Validation annulée; les publications liées ont été retirées.",
+            "course_grade": CourseGradeDetailSerializer(course_grade).data,
         })
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, IsTeacherOrAdmin])
@@ -979,8 +965,6 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
         
         Sets is_published=True and records publication timestamp for all matching grades.
         """
-        from django.utils import timezone
-        
         course_id = request.data.get('course_id')
         semester_id = request.data.get('semester_id')
         
@@ -990,40 +974,18 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Validate teacher assignment if user is a teacher
-        if request.user.role == 'TEACHER':
-            from apps.teachers.models import TeacherCourse
-            is_assigned = TeacherCourse.objects.filter(
-                teacher__user=request.user,
-                course_id=course_id,
-                semester_id=semester_id
-            ).exists()
-            
-            if not is_assigned:
-                return Response(
-                    {"error": "Vous n'êtes pas assigné à ce cours pour ce semestre"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-        
-        # Get all unpublished, validated course grades
-        course_grades = CourseGrade.objects.filter(
-            course_id=course_id,
-            semester_id=semester_id,
-            is_validated=True,
-            is_published=False
-        )
-        
-        if not course_grades.exists():
-            return Response({
-                "message": "Aucune note à publier",
-                "published_count": 0
-            })
-        
-        # Publish all grades
-        now = timezone.now()
-        updated_count = course_grades.update(
-            is_published=True,
-            published_at=now
+        from apps.university.models import Semester
+        try:
+            course = Course.objects.get(pk=course_id)
+            semester = Semester.objects.select_related('academic_year').get(pk=semester_id)
+        except (Course.DoesNotExist, Semester.DoesNotExist):
+            return Response({"error": "Cours ou semestre non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+
+        updated_count, now = set_course_grades_published(
+            actor=request.user,
+            course=course,
+            semester=semester,
+            published=True,
         )
         
         return Response({
@@ -1033,6 +995,29 @@ class CourseGradeViewSet(viewsets.ModelViewSet):
             "semester_id": semester_id,
             "published_at": now.isoformat()
         })
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated, IsTeacherOrAdmin])
+    def unpublish(self, request):
+        course_id = request.data.get('course_id')
+        semester_id = request.data.get('semester_id')
+        if not course_id or not semester_id:
+            return Response(
+                {"error": "course_id et semester_id sont requis"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        from apps.university.models import Semester
+        try:
+            course = Course.objects.get(pk=course_id)
+            semester = Semester.objects.select_related('academic_year').get(pk=semester_id)
+        except (Course.DoesNotExist, Semester.DoesNotExist):
+            return Response({"error": "Cours ou semestre non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+        updated_count, _ = set_course_grades_published(
+            actor=request.user,
+            course=course,
+            semester=semester,
+            published=False,
+        )
+        return Response({"message": "Publication annulée", "unpublished_count": updated_count})
 
 
 class ReportCardViewSet(viewsets.ModelViewSet):
@@ -1096,9 +1081,12 @@ class ReportCardViewSet(viewsets.ModelViewSet):
         - Read operations: All authenticated users (with role-based filtering)
         - Write operations: Admin only
         """
-        if self.action in ['list', 'retrieve', 'calculate_gpa']:
+        if self.action in ['list', 'retrieve', 'download_pdf']:
             return [IsAuthenticated()]
+        if self.action in ['calculate_gpa', 'publish', 'unpublish', 'generate_bulk']:
+            return [IsAuthenticated(), IsSecretaryOrAdmin()]
         return [IsAuthenticated(), IsAdminOrReadOnly()]
+
     def get_queryset(self):
         """
         Filter queryset based on user role.
@@ -1110,7 +1098,7 @@ class ReportCardViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.role in ['ADMIN', 'SECRETARY']:
+        if user.role in ['ADMIN', 'SECRETARY', 'DEAN']:
             return self.queryset
         elif user.role == 'TEACHER':
             # Teachers can see report cards for students in their courses
@@ -1127,6 +1115,13 @@ class ReportCardViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Automatically set generated_by to current user."""
         serializer.save(generated_by=self.request.user)
+
+    def perform_update(self, serializer):
+        report_card = serializer.save()
+        if report_card.is_published:
+            report_card.is_published = False
+            report_card.published_at = None
+            report_card.save(update_fields=['is_published', 'published_at'])
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsSecretaryOrAdmin])
     def calculate_gpa(self, request, pk=None):
@@ -1162,15 +1157,37 @@ class ReportCardViewSet(viewsets.ModelViewSet):
                 {"message": "Ce bulletin est déjà publié"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
+        course_grades = CourseGrade.objects.filter(
+            student=report_card.student,
+            semester=report_card.semester,
+        )
+        if not course_grades.exists() or course_grades.filter(is_validated=False).exists():
+            return Response(
+                {"error": "Toutes les notes de cours doivent être validées avant publication."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        report_card.calculate_gpa()
         report_card.is_published = True
         report_card.published_at = timezone.now()
-        report_card.save()
+        report_card.save(update_fields=['is_published', 'published_at'])
         
         serializer = ReportCardDetailSerializer(report_card)
         return Response({
             "message": "Bulletin publié avec succès",
             "report_card": serializer.data
+        })
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsSecretaryOrAdmin])
+    def unpublish(self, request, pk=None):
+        report_card = self.get_object()
+        report_card.is_published = False
+        report_card.published_at = None
+        report_card.save(update_fields=['is_published', 'published_at'])
+        return Response({
+            "message": "Publication du bulletin annulée",
+            "report_card": ReportCardDetailSerializer(report_card).data,
         })
 
     @action(detail=True, methods=['get'])
@@ -1282,6 +1299,23 @@ class DeliberationViewSet(viewsets.ViewSet):
     """
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
 
+    @extend_schema(
+        request=inline_serializer(
+            name='DeliberationRequest',
+            fields={
+                'academic_year_id': serializers.IntegerField(),
+                'student_id': serializers.IntegerField(required=False),
+                'program_id': serializers.IntegerField(required=False),
+            },
+        ),
+        responses=inline_serializer(
+            name='DeliberationResponse',
+            fields={
+                'processed_count': serializers.IntegerField(),
+                'results': serializers.ListField(child=serializers.DictField()),
+            },
+        ),
+    )
     @action(detail=False, methods=['post'])
     def process(self, request):
         """
@@ -1303,6 +1337,13 @@ class DeliberationViewSet(viewsets.ViewSet):
         except AcademicYear.DoesNotExist:
             return Response({'error': 'Année académique introuvable'}, status=status.HTTP_404_NOT_FOUND)
 
+        # Deliberation is only allowed for the current academic year
+        if not academic_year.is_current:
+            return Response(
+                {'error': 'La délibération ne peut être effectuée que pour l\'année académique en cours.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         students_to_process = []
 
         if student_id:
@@ -1312,6 +1353,13 @@ class DeliberationViewSet(viewsets.ViewSet):
             except Student.DoesNotExist:
                 return Response({'error': 'Étudiant introuvable'}, status=status.HTTP_404_NOT_FOUND)
         elif program_id:
+            # Check if deliberation already exists for this program and year
+            from apps.students.models import StudentPromotion
+            if StudentPromotion.objects.filter(program_id=program_id, academic_year=academic_year).exists():
+                return Response(
+                    {'error': 'La délibération a déjà été effectuée pour ce programme pour cette année.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             students_to_process = Student.objects.filter(program_id=program_id, status='ACTIVE')
         else:
             return Response({'error': 'student_id ou program_id requis'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1339,3 +1387,50 @@ class DeliberationViewSet(viewsets.ViewSet):
             'results': results
         })
 
+    @extend_schema(
+        responses=inline_serializer(
+            name='DeliberationResultsResponse',
+            fields={
+                'count': serializers.IntegerField(),
+                'results': serializers.ListField(child=serializers.DictField()),
+            },
+        )
+    )
+    @action(detail=False, methods=['get'])
+    def results(self, request):
+        """
+        Récupérer les résultats de délibération existants.
+        """
+        from apps.students.models import Student, StudentPromotion
+        from apps.university.models import AcademicYear
+
+        academic_year_id = request.query_params.get('academic_year_id')
+        program_id = request.query_params.get('program_id')
+
+        if not academic_year_id:
+            return Response({'error': 'academic_year_id requis'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            academic_year = AcademicYear.objects.get(pk=academic_year_id)
+        except AcademicYear.DoesNotExist:
+            return Response({'error': 'Année académique introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
+        promotions = StudentPromotion.objects.filter(academic_year=academic_year)
+        if program_id:
+            promotions = promotions.filter(program_id=program_id)
+
+        results = []
+        for promo in promotions:
+             results.append({
+                'student': promo.student.user.get_full_name(),
+                'matricule': promo.student.student_id,
+                'decision': promo.get_decision_display(),
+                'annual_gpa': promo.annual_gpa,
+                'next_level': promo.level_to.name if promo.level_to else None,
+                'remarks': promo.remarks
+            })
+
+        return Response({
+            'count': len(results),
+            'results': results
+        })

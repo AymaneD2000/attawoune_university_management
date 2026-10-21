@@ -1,11 +1,25 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from .models import Student, Enrollment, Attendance
 
 
 # Student Serializers
+class StudentPhotoValidationMixin:
+    max_photo_size = 5 * 1024 * 1024
+
+    def validate_photo(self, value):
+        if value and value.size > self.max_photo_size:
+            raise serializers.ValidationError(
+                "La photo ne doit pas dépasser 5 Mo."
+            )
+        return value
+
+
 class StudentListSerializer(serializers.ModelSerializer):
     """List serializer for Student with basic fields."""
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
     program_name = serializers.CharField(source='program.name', read_only=True)
     level_display = serializers.CharField(
         source='current_level.get_name_display', read_only=True
@@ -15,15 +29,18 @@ class StudentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = [
-            'id', 'user', 'student_id', 'user_name', 'program_name', 
-            'level_display', 'status', 'status_display', 'enrollment_date',
+            'id', 'user', 'student_id', 'user_name', 'first_name', 'last_name', 'program_name',
+            'current_level', 'level_display', 'status', 'status_display', 'enrollment_date',
             'photo'
         ]
 
 
-class StudentDetailSerializer(serializers.ModelSerializer):
+class StudentDetailSerializer(StudentPhotoValidationMixin, serializers.ModelSerializer):
     """Detail serializer for Student with all fields and computed properties."""
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    date_of_birth = serializers.DateField(source='user.date_of_birth', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
     user_phone = serializers.CharField(source='user.phone', read_only=True)
     program_name = serializers.CharField(source='program.name', read_only=True)
@@ -39,16 +56,42 @@ class StudentDetailSerializer(serializers.ModelSerializer):
     )
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     enrollments_count = serializers.SerializerMethodField()
+    program_levels = serializers.SerializerMethodField()
     
     class Meta:
         model = Student
         fields = '__all__'
     
-    def get_enrollments_count(self, obj):
+    def get_enrollments_count(self, obj) -> int:
         return obj.enrollments.count()
 
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
+    def get_program_levels(self, obj) -> list[dict[str, object]]:
+        """Return levels associated with the student's program."""
+        if obj.program:
+            return [
+                {'id': level.id, 'display_name': level.display_name}
+                for level in obj.program.levels.all()
+            ]
+        return []
 
-class StudentCreateSerializer(serializers.ModelSerializer):
+    def update(self, instance, validated_data):
+        replacing_photo = 'photo' in validated_data
+        old_photo_name = instance.photo.name if replacing_photo and instance.photo else ''
+        old_photo_storage = instance.photo.storage if old_photo_name else None
+
+        student = super().update(instance, validated_data)
+
+        if (
+            old_photo_storage
+            and old_photo_name
+            and old_photo_name != getattr(student.photo, 'name', '')
+        ):
+            old_photo_storage.delete(old_photo_name)
+        return student
+
+
+class StudentCreateSerializer(StudentPhotoValidationMixin, serializers.ModelSerializer):
     """Create serializer for Student with validation."""
     
     class Meta:
@@ -235,6 +278,7 @@ class AttendanceCreateSerializer(serializers.ModelSerializer):
         fields = [
             'student', 'course_session', 'status', 'remarks', 'recorded_by'
         ]
+        read_only_fields = ['recorded_by']
     
     def validate(self, attrs):
         """Validate attendance constraints."""
