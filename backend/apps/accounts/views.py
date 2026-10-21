@@ -4,10 +4,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from .serializers import (
-    UserSerializer, UserCreateSerializer, UserUpdateSerializer,
+    CurrentUserProfileSerializer, UserSerializer, UserCreateSerializer, UserUpdateSerializer,
     PasswordChangeSerializer, RegisterSerializer
 )
+from apps.core.permissions import IsAdmin
 
 User = get_user_model()
 
@@ -17,6 +19,14 @@ class IsAdminOrSelf(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.is_admin or obj == request.user
+
+
+class CanCreateUsers(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            and request.user.role in {User.Role.ADMIN, User.Role.DEAN, User.Role.SECRETARY}
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -36,14 +46,18 @@ class UserViewSet(viewsets.ModelViewSet):
         return UserSerializer
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy']:
-            return [permissions.IsAuthenticated(), permissions.IsAdminUser()]
+        if self.action == 'destroy':
+            return [IsAdmin()]
+        if self.action == 'create':
+            return [CanCreateUsers()]
         return super().get_permissions()
 
     def get_queryset(self):
         user = self.request.user
         if user.is_admin:
             return User.objects.all()
+        if user.role == 'DEAN':
+            return User.objects.exclude(role='ADMIN')
         return User.objects.filter(id=user.id)
 
     @action(detail=True, methods=['post'])
@@ -70,8 +84,8 @@ class UserViewSet(viewsets.ModelViewSet):
         """Get users filtered by role."""
         role = request.query_params.get('role', None)
         if role:
-            users = User.objects.filter(role=role.upper())
-            serializer = UserSerializer(users, many=True)
+            users = self.get_queryset().filter(role=role.upper())
+            serializer = UserSerializer(users, many=True, context={'request': request})
             return Response(serializer.data)
         return Response(
             {"error": "Role parameter required"},
@@ -83,15 +97,18 @@ class CurrentUserView(APIView):
     """View for getting current authenticated user."""
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(responses=UserSerializer)
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+    @extend_schema(request=CurrentUserProfileSerializer, responses=UserSerializer)
     def patch(self, request):
-        serializer = UserUpdateSerializer(
+        serializer = CurrentUserProfileSerializer(
             request.user,
             data=request.data,
-            partial=True
+            partial=True,
+            context={'request': request},
         )
         if serializer.is_valid():
             serializer.save()

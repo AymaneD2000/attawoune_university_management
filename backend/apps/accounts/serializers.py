@@ -14,17 +14,18 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'full_name', 'role', 'role_display', 'phone', 'address', 
-            'profile_picture', 'date_of_birth', 'is_active', 
+            'first_name_ar', 'last_name_ar',
+            'full_name', 'role', 'role_display', 'phone', 'address', 'address_ar',
+            'profile_picture', 'date_of_birth', 'is_active',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'full_name', 'role_display']
 
-    def get_full_name(self, obj):
+    def get_full_name(self, obj) -> str:
         """Return the full name of the user."""
         return obj.get_full_name()
     
-    def get_role_display(self, obj):
+    def get_role_display(self, obj) -> str:
         """Return the human-readable role display."""
         return obj.get_role_display()
 
@@ -42,7 +43,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'password', 'password_confirm',
-            'first_name', 'last_name', 'role', 'phone', 'address',
+            'first_name', 'last_name', 'first_name_ar', 'last_name_ar',
+            'role', 'phone', 'address', 'address_ar',
             'date_of_birth', 'gender'
         ]
         read_only_fields = ['id']
@@ -52,7 +54,22 @@ class UserCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "password": "Les mots de passe ne correspondent pas."
             })
-        return attrs
+
+        request = self.context.get('request')
+        requested_role = attrs.get('role', User.Role.STUDENT)
+        requester_role = getattr(getattr(request, 'user', None), 'role', None)
+
+        if requester_role == User.Role.ADMIN:
+            return attrs
+        if (
+            requester_role in {User.Role.DEAN, User.Role.SECRETARY}
+            and requested_role in {User.Role.STUDENT, User.Role.TEACHER}
+        ):
+            return attrs
+
+        raise serializers.ValidationError({
+            'role': "Vous n'êtes pas autorisé à attribuer ce rôle."
+        })
 
     def create(self, validated_data):
         validated_data.pop('password_confirm')
@@ -62,13 +79,61 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating users."""
+    password = serializers.CharField(
+        write_only=True,
+        required=False,
+        validators=[validate_password]
+    )
+    password_confirm = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
         fields = [
-            'first_name', 'last_name', 'phone', 'address',
-            'profile_picture', 'date_of_birth'
+            'first_name', 'last_name', 'first_name_ar', 'last_name_ar',
+            'phone', 'address', 'address_ar',
+            'profile_picture', 'date_of_birth', 'gender',
+            'role', 'is_active', 'email', 'password', 'password_confirm'
         ]
+
+    def validate(self, attrs):
+        if 'password' in attrs:
+            if attrs['password'] != attrs.get('password_confirm'):
+                raise serializers.ValidationError({
+                    "password": "Les mots de passe ne correspondent pas."
+                })
+        return attrs
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        validated_data.pop('password_confirm', None)
+
+        request = self.context.get('request')
+        if not request or not request.user.is_admin:
+            # Ensure non-admins cannot change role or is_active
+            validated_data.pop('role', None)
+            validated_data.pop('is_active', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if password:
+            instance.set_password(password)
+
+        instance.save()
+        return instance
+
+
+class CurrentUserProfileSerializer(serializers.ModelSerializer):
+    """Fields users are allowed to change on their own profile."""
+
+    class Meta:
+        model = User
+        fields = [
+            'first_name', 'last_name', 'first_name_ar', 'last_name_ar',
+            'email', 'phone', 'address', 'address_ar',
+            'profile_picture', 'date_of_birth', 'gender',
+        ]
+
 
 
 class PasswordChangeSerializer(serializers.Serializer):
