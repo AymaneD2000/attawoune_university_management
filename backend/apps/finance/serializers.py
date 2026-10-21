@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from decimal import Decimal
-from .models import TuitionPayment, TuitionFee, StudentBalance, Salary, Expense
+from django.utils import timezone
+from .models import TuitionPayment, TuitionFee, StudentBalance, Salary, Expense, StudentDebt, DebtPayment
 
 
 # TuitionPayment Serializers
@@ -14,6 +15,12 @@ class TuitionPaymentListSerializer(serializers.ModelSerializer):
     )
     academic_year_name = serializers.CharField(
         source='academic_year.name', read_only=True
+    )
+    level_name = serializers.CharField(
+        source='level.display_name', read_only=True
+    )
+    semester_name = serializers.CharField(
+        source='semester.semester_type', read_only=True
     )
     payment_method_display = serializers.CharField(
         source='get_payment_method_display', read_only=True
@@ -29,9 +36,10 @@ class TuitionPaymentListSerializer(serializers.ModelSerializer):
         model = TuitionPayment
         fields = [
             'id', 'student', 'student_name', 'student_matricule',
-            'academic_year', 'academic_year_name', 'amount', 'payment_method',
+            'academic_year', 'academic_year_name', 'level', 'level_name',
+            'semester', 'semester_name', 'amount', 'payment_method',
             'payment_method_display', 'status', 'status_display', 'reference',
-            'payment_date', 'received_by', 'received_by_name'
+            'payment_date', 'created_at', 'received_by', 'received_by_name'
         ]
 
 
@@ -48,6 +56,12 @@ class TuitionPaymentDetailSerializer(serializers.ModelSerializer):
     )
     academic_year_name = serializers.CharField(
         source='academic_year.name', read_only=True
+    )
+    level_name = serializers.CharField(
+        source='level.display_name', read_only=True
+    )
+    semester_name = serializers.CharField(
+        source='semester.semester_type', read_only=True
     )
     payment_method_display = serializers.CharField(
         source='get_payment_method_display', read_only=True
@@ -70,17 +84,26 @@ class TuitionPaymentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TuitionPayment
         fields = [
-            'student', 'academic_year', 'amount', 'payment_method',
-            'status', 'reference', 'description', 'receipt_number',
-            'payment_date', 'received_by'
+            'id', 'student', 'academic_year', 'level', 'semester', 'amount',
+            'payment_method', 'status', 'reference', 'description',
+            'receipt_number', 'payment_date', 'received_by'
         ]
         extra_kwargs = {
+            'id': {'read_only': True},
             'academic_year': {'required': False},
+            'level': {'required': False},
+            'semester': {'required': False},
             'reference': {'required': False},
             'payment_date': {'required': False},
             'received_by': {'read_only': True}
         }
     
+    def validate(self, attrs):
+        """Validate payment constraints."""
+        if attrs.get('payment_date') is None:
+            attrs['payment_date'] = timezone.now().date()
+        return attrs
+
     def validate_amount(self, value):
         """Validate that amount is positive."""
         if value <= 0:
@@ -106,13 +129,14 @@ class TuitionFeeListSerializer(serializers.ModelSerializer):
     academic_year_name = serializers.CharField(
         source='academic_year.name', read_only=True
     )
+    level_name = serializers.CharField(source='level.display_name', read_only=True)
     
     class Meta:
         model = TuitionFee
         fields = [
             'id', 'program', 'program_name', 'program_code',
-            'academic_year', 'academic_year_name', 'amount',
-            'installments_allowed', 'due_date'
+            'academic_year', 'academic_year_name', 'level', 'level_name',
+            'amount', 'installments_allowed', 'due_date'
         ]
 
 
@@ -144,7 +168,7 @@ class TuitionFeeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TuitionFee
         fields = [
-            'program', 'academic_year', 'amount', 'installments_allowed', 'due_date'
+            'program', 'academic_year', 'level', 'amount', 'installments_allowed', 'due_date'
         ]
         # Remove default unique_together validator to use custom validation
         validators = []
@@ -174,9 +198,10 @@ class TuitionFeeCreateSerializer(serializers.ModelSerializer):
         if program and academic_year:
             # Only check for duplicates on create (when instance is None)
             if not self.instance:
-                if TuitionFee.objects.filter(program=program, academic_year=academic_year).exists():
+                level = attrs.get('level')
+                if TuitionFee.objects.filter(program=program, academic_year=academic_year, level=level).exists():
                     raise serializers.ValidationError({
-                        "program": "Des frais de scolarité existent déjà pour ce programme et cette année académique."
+                        "non_field_errors": ["Des frais de scolarité existent déjà pour ce programme, cette année académique et ce niveau."]
                     })
         
         return attrs
@@ -201,12 +226,16 @@ class StudentBalanceListSerializer(serializers.ModelSerializer):
         max_digits=12, decimal_places=2, read_only=True
     )
     is_paid = serializers.BooleanField(read_only=True)
-    
+
+    student_level = serializers.CharField(
+        source='student.current_level.get_name_display', read_only=True
+    )
+
     class Meta:
         model = StudentBalance
         fields = [
             'id', 'student', 'student_name', 'student_matricule', 'student_program',
-            'academic_year', 'academic_year_name', 'total_due',
+            'student_level', 'academic_year', 'academic_year_name', 'total_due',
             'total_paid', 'balance', 'is_paid', 'updated_at'
         ]
 
@@ -244,7 +273,7 @@ class StudentBalanceDetailSerializer(serializers.ModelSerializer):
         model = StudentBalance
         fields = '__all__'
     
-    def get_payments_count(self, obj):
+    def get_payments_count(self, obj) -> int:
         return obj.student.tuition_payments.filter(
             academic_year=obj.academic_year,
             status='COMPLETED'
@@ -273,7 +302,7 @@ class SalaryListSerializer(serializers.ModelSerializer):
             'id', 'employee', 'employee_name', 'employee_email',
             'month', 'year', 'base_salary', 'bonuses', 'deductions',
             'net_salary', 'status', 'status_display', 'payment_date',
-            'processed_by', 'processed_by_name'
+            'processed_by', 'processed_by_name', 'created_at'
         ]
 
 
@@ -434,6 +463,88 @@ class ExpenseCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Le montant doit être positif."
             )
+        return value
+
+
+# StudentDebt Serializers
+class DebtPaymentDisplaySerializer(serializers.ModelSerializer):
+    """Display serializer for DebtPayment (read-only in debt detail)."""
+    payment_method_display = serializers.CharField(
+        source='get_payment_method_display', read_only=True
+    )
+    received_by_name = serializers.CharField(
+        source='received_by.get_full_name', read_only=True, default=None
+    )
+
+    class Meta:
+        model = DebtPayment
+        fields = [
+            'id', 'amount', 'payment_date', 'payment_method',
+            'payment_method_display', 'reference', 'notes',
+            'received_by', 'received_by_name', 'created_at'
+        ]
+
+
+class DebtPaymentCreateSerializer(serializers.ModelSerializer):
+    """Serializer for recording a payment against a student debt."""
+
+    class Meta:
+        model = DebtPayment
+        fields = ['amount', 'payment_date', 'payment_method', 'notes']
+
+    def validate_amount(self, value):
+        if value is None or value <= 0:
+            raise serializers.ValidationError("Le montant payé doit être supérieur à zéro.")
+        return value
+
+
+class StudentDebtListSerializer(serializers.ModelSerializer):
+    """List serializer for StudentDebt with display fields."""
+    student_name = serializers.CharField(
+        source='student.user.get_full_name', read_only=True
+    )
+    student_matricule = serializers.CharField(
+        source='student.student_id', read_only=True
+    )
+    academic_year_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True
+    )
+    outstanding = serializers.DecimalField(
+        max_digits=12, decimal_places=2, read_only=True
+    )
+
+    class Meta:
+        model = StudentDebt
+        fields = [
+            'id', 'student', 'student_name', 'student_matricule',
+            'academic_year', 'academic_year_name', 'amount_due', 'amount_paid',
+            'outstanding', 'status', 'status_display', 'description',
+            'recorded_by', 'created_at'
+        ]
+
+    def get_academic_year_name(self, obj) -> str:
+        return obj.academic_year.name if obj.academic_year else None
+
+
+class StudentDebtDetailSerializer(StudentDebtListSerializer):
+    """Detail serializer for StudentDebt including its payments."""
+    payments = DebtPaymentDisplaySerializer(many=True, read_only=True)
+
+    class Meta(StudentDebtListSerializer.Meta):
+        fields = StudentDebtListSerializer.Meta.fields + ['payments']
+
+
+class StudentDebtCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating a student debt."""
+
+    class Meta:
+        model = StudentDebt
+        fields = ['student', 'academic_year', 'amount_due', 'description']
+
+    def validate_amount_due(self, value):
+        if value is None or value <= 0:
+            raise serializers.ValidationError("Le montant dû doit être supérieur à zéro.")
         return value
 
 
