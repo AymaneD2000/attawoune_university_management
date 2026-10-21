@@ -16,6 +16,7 @@ from apps.core.permissions import IsAdminOrReadOnly, IsSecretaryOrAdmin
 from .models import Teacher, TeacherCourse, TeacherContract
 from .serializers import (
     TeacherListSerializer, TeacherDetailSerializer, TeacherCreateSerializer,
+    TeacherUpdateSerializer,
     TeacherCourseListSerializer, TeacherCourseDetailSerializer, TeacherCourseCreateSerializer,
     TeacherContractListSerializer, TeacherContractDetailSerializer, TeacherContractCreateSerializer
 )
@@ -73,6 +74,8 @@ class TeacherViewSet(viewsets.ModelViewSet):
             return TeacherDetailSerializer
         elif self.action == 'create':
             return TeacherCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return TeacherUpdateSerializer
         return TeacherDetailSerializer
     
     def get_permissions(self):
@@ -96,7 +99,7 @@ class TeacherViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.role in ['ADMIN', 'SECRETARY']:
+        if user.role in ['ADMIN', 'SECRETARY', 'DEAN']:
             return self.queryset
         elif user.role == 'TEACHER':
             # Teachers can see all teachers but only modify their own profile
@@ -277,7 +280,7 @@ class TeacherCourseViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.role in ['ADMIN', 'SECRETARY']:
+        if user.role in ['ADMIN', 'SECRETARY', 'DEAN']:
             return self.queryset
         elif user.role == 'TEACHER':
             # Teachers can see only their own course assignments
@@ -362,7 +365,7 @@ class TeacherContractViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         
-        if user.role in ['ADMIN', 'SECRETARY']:
+        if user.role in ['ADMIN', 'SECRETARY', 'DEAN']:
             return self.queryset
         elif user.role == 'TEACHER':
             # Teachers can only see their own contracts
