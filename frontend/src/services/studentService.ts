@@ -11,6 +11,8 @@ import {
     StudentListParams,
     StudentReportCard,
     StudentSummary,
+    AcademicYearCorrectionRequest,
+    AcademicYearCorrectionResponse,
 } from '../types';
 
 type CompatibleStudentListParams = Partial<
@@ -215,6 +217,15 @@ export const studentService = {
 
     reinscribeStudent: async (data: { student: number; level?: number; program?: number }) => {
         const response = await api.post('/students/reinscription/', data);
+        return response.data;
+    },
+
+    // Academic-year correction: bulk-move newly created students to the right year
+    correctAcademicYear: async (data: AcademicYearCorrectionRequest) => {
+        const response = await api.post<AcademicYearCorrectionResponse>(
+            '/students/correct-academic-year/',
+            data,
+        );
         return response.data;
     },
 };

@@ -447,3 +447,25 @@ export interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
+
+// Academic-year correction types
+export interface AcademicYearCorrectionRequest {
+  student_ids: number[];
+  source_academic_year: number;
+  target_academic_year: number;
+  enrollment_date: string;
+}
+
+export interface AcademicYearCorrectionResponse {
+  transferred: Array<{
+    student: number;
+    name: string;
+    old_student_id: string;
+    new_student_id: string;
+  }>;
+  blocked: Array<{
+    student: number;
+    student_id?: string;
+    reason: string;
+  }>;
+}

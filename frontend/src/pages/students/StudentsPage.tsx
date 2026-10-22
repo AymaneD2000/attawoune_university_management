@@ -3,6 +3,7 @@ import {
   ArrowDownTrayIcon,
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
+  CalendarDaysIcon,
   CreditCardIcon,
   PlusIcon,
   UsersIcon,
@@ -18,7 +19,8 @@ import { ResponsiveDataView } from '../../components/ui/ResponsiveDataView';
 import { useToast } from '../../components/ui/ToastProvider';
 import studentService from '../../services/studentService';
 import universityService from '../../services/universityService';
-import { Level, Program, Student } from '../../types';
+import { AcademicYearCorrectionResponse, Level, Program, Student } from '../../types';
+import AcademicYearCorrectionModal from './AcademicYearCorrectionModal';
 import ExcelImportModal from './ExcelImportModal';
 import ReinscriptionModal from './ReinscriptionModal';
 import StudentFilters from './StudentFilters';
@@ -30,6 +32,7 @@ import { useStudentListParams } from './useStudentListParams';
 import { useStudentListScroll } from './useStudentListScroll';
 
 const MANAGER_ROLES = ['ADMIN', 'DEAN', 'SECRETARY'];
+const YEAR_CORRECTION_ROLES = ['ADMIN', 'SECRETARY'];
 
 const getHttpStatus = (error: unknown): number | undefined => {
   if (!error || typeof error !== 'object') return undefined;
@@ -58,6 +61,7 @@ const StudentsPage: React.FC = () => {
   const query = useStudentsQuery(params);
   const summaryQuery = useStudentSummaryQuery(params.current_year_only);
   const canManage = MANAGER_ROLES.includes(user?.role || '');
+  const canCorrectYear = YEAR_CORRECTION_ROLES.includes(user?.role || '');
   const students = query.data?.results || [];
   const totalCount = query.data?.count || 0;
   const restricted = query.isError && getHttpStatus(query.error) === 403;
@@ -71,6 +75,7 @@ const StudentsPage: React.FC = () => {
   const [showStudentForm, setShowStudentForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showReinscriptionModal, setShowReinscriptionModal] = useState(false);
+  const [showYearCorrection, setShowYearCorrection] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -113,6 +118,22 @@ const StudentsPage: React.FC = () => {
     void query.refetch();
     void summaryQuery.refetch();
   }, [query, summaryQuery]);
+
+  const handleYearCorrectionCompleted = (result: AcademicYearCorrectionResponse) => {
+    // The dialog stays open so the operator can review the result first.
+    refreshStudents();
+    if (result.blocked.length === 0) {
+      toast.success(t(
+        'students.year_correction.summary_complete',
+        'Tous les étudiants sélectionnés ont été transférés.',
+      ));
+    } else {
+      toast.info(t('students.year_correction.summary_partial', {
+        count: result.blocked.length,
+        defaultValue: '{{count}} étudiant(s) bloqué(s) pour revue manuelle.',
+      }));
+    }
+  };
 
   const handleDownloadIdCard = async (student: Student) => {
     try {
@@ -273,6 +294,12 @@ const StudentsPage: React.FC = () => {
               <CreditCardIcon className="h-5 w-5" aria-hidden="true" />
               {t('students.actions.download_cards', 'Télécharger les cartes')}
             </Button>
+            {canCorrectYear && (
+              <Button variant="secondary" onClick={() => setShowYearCorrection(true)}>
+                <CalendarDaysIcon className="h-5 w-5" aria-hidden="true" />
+                {t('students.actions.correct_year', "Corriger l'année académique")}
+              </Button>
+            )}
           </div>
         </section>
       )}
@@ -350,6 +377,15 @@ const StudentsPage: React.FC = () => {
         onClose={() => setShowImportModal(false)}
         onRefresh={refreshStudents}
       />
+
+      {showYearCorrection && (
+        <AcademicYearCorrectionModal
+          open
+          studentIds={selectedIds}
+          onClose={() => setShowYearCorrection(false)}
+          onCompleted={handleYearCorrectionCompleted}
+        />
+      )}
     </div>
   );
 };
