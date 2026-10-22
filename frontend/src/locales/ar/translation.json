@@ -1,675 +1,1192 @@
 {
-    "sidebar": {
-        "dashboard": "لوحة القيادة",
-        "structure": "الهيكل",
-        "faculties": "الكليات",
-        "departments": "الأقسام",
-        "programs": "الشعب",
-        "classrooms": "القاعات",
-        "levels": "المستويات",
-        "academics": "الدراسة",
-        "students": "الطلاب",
-        "teachers": "الأساتذة",
-        "courses": "المقررات",
-        "exams": "الامتحانات",
-        "transcripts": "كشوف النقاط",
-        "finance": "المالية",
-        "overview": "نظرة عامة",
-        "payments": "المدفوعات",
-        "salaries": "الرواتب",
-        "expenses": "النفقات",
-        "scheduling": "الجداول الزمنية",
-        "planning": "التخطيط",
-        "settings": "الإعدادات",
-        "users": "المستخدمين",
-        "profile": "الملف الشخصي"
+  "auth": {
+    "login": {
+      "subtitle": "سجّل الدخول إلى حسابك",
+      "invalid_credentials": "بيانات الاعتماد غير صحيحة",
+      "username_label": "اسم المستخدم",
+      "username_placeholder": "اسم المستخدم",
+      "password_label": "كلمة المرور",
+      "password_placeholder": "كلمة المرور",
+      "loading": "جارٍ تسجيل الدخول...",
+      "submit": "تسجيل الدخول"
+    }
+  },
+  "sidebar": {
+    "dashboard": "لوحة القيادة",
+    "structure": "الهيكل",
+    "faculties": "الكليات",
+    "departments": "الأقسام",
+    "programs": "الشعب",
+    "classrooms": "القاعات",
+    "levels": "المستويات",
+    "academics": "الدراسة",
+    "students": "الطلاب",
+    "teachers": "الأساتذة",
+    "courses": "المقررات",
+    "exams": "الامتحانات",
+    "transcripts": "كشوف النقاط",
+    "finance": "المالية",
+    "overview": "نظرة عامة",
+    "payments": "المدفوعات",
+    "salaries": "الرواتب",
+    "expenses": "النفقات",
+    "recovery": "التحصيل",
+    "grades": "الدرجات",
+    "deliberation": "المداولات",
+    "announcements": "الإعلانات",
+    "scheduling": "الجداول الزمنية",
+    "planning": "التخطيط",
+    "settings": "الإعدادات",
+    "users": "المستخدمين",
+    "profile": "الملف الشخصي"
+  },
+  "common": {
+    "logout": "تسجيل خروج",
+    "search": "بحث...",
+    "language": "اللغة",
+    "actions": "إجراءات",
+    "prev": "السابق",
+    "next": "التالي",
+    "showing": "عرض {{current}} من {{total}}",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "edit": "تعديل",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ...",
+    "close": "إغلاق",
+    "note": "ملاحظة",
+    "skip_to_content": "الانتقال إلى المحتوى الرئيسي",
+    "open_menu": "فتح القائمة",
+    "close_menu": "إغلاق القائمة",
+    "main_navigation": "التنقل الرئيسي",
+    "expand": "توسيع",
+    "collapse": "طيّ",
+    "retry": "إعادة المحاولة",
+    "user_manual": "دليل المستخدم",
+    "loading": "جارٍ التحميل...",
+    "success": "نجاح",
+    "error": "خطأ",
+    "no_data": "لا توجد بيانات متاحة",
+    "all": "الكل"
+  },
+  "dashboard": {
+    "welcome": {
+      "morning": "صباح الخير",
+      "afternoon": "طاب مساؤك",
+      "evening": "مساء الخير"
     },
-    "common": {
-        "logout": "تسجيل خروج",
-        "search": "بحث...",
-        "language": "اللغة",
-        "actions": "إجراءات",
-        "prev": "السابق",
+    "subtitle": "إليك نظرة عامة على مساحتك • {{date}}",
+    "stats": {
+      "students_enrolled": "الطلاب المسجلين",
+      "teachers": "الأساتذة",
+      "programs": "الشعب / البرامج",
+      "revenue": "الإيرادات المحصلة",
+      "my_courses": "دوراتي",
+      "pending_grades": "درجات قيد الانتظار",
+      "gpa": "المعدل التراكمي",
+      "credits_validated": "الوحدات التي تم التحقق منها",
+      "courses_enrolled": "الدورات المسجلة"
+    },
+    "sections": {
+      "recent_inscriptions": "التسجيلات الأخيرة",
+      "recent_payments": "المدفوعات الأخيرة",
+      "todays_schedule": "جدول اليوم",
+      "recent_grades": "أحدث الدرجات",
+      "view_all": "عرض الكل",
+      "no_inscriptions": "لا توجد تسجيلات حديثة",
+      "no_payments": "لا توجد مدفوعات حديثة",
+      "no_schedule": "لا توجد دورات اليوم",
+      "no_grades": "لا توجد درجات حديثة"
+    }
+  },
+  "students": {
+    "title": "إدارة الطلاب",
+    "subtitle": "إجمالي {{count}} طالب",
+    "profile": {
+      "back": "العودة إلى الطلاب",
+      "eyebrow": "ملف الطالب",
+      "loading": "جارٍ تحميل ملف الطالب",
+      "not_found": {
+        "title": "الطالب غير موجود",
+        "description": "ملف الطالب المطلوب غير موجود أو أن رابطه غير صالح."
+      },
+      "restricted": {
+        "title": "ملف مقيّد",
+        "description": "دورك لا يسمح بعرض ملف هذا الطالب."
+      },
+      "error": {
+        "title": "تعذر تحميل ملف الطالب",
+        "description": "تحقق من اتصالك ثم أعد المحاولة."
+      }
+    },
+    "actions": {
+      "add": "إضافة",
+      "import": "استيراد",
+      "export": "تصدير",
+      "id_card": "بطاقة الطالب",
+      "download_cards": "تحميل البطاقات",
+      "new_student": "طالب جديد",
+      "reinscription": "إعادة التسجيل"
+    },
+    "reinscription": {
+      "title": "إعادة التسجيل (السنة السابقة)",
+      "description": "اختر طالبًا من السنة السابقة لتسجيله في السنة الأكاديمية الجاري. هذا هو الانتقال الوحيد للبيانات بين السنتين.",
+      "search_placeholder": "ابحث عن طالب من السنة السابقة (الاسم أو الرقم القاعدي)...",
+      "loading": "جارٍ البحث...",
+      "empty": "لا يوجد طلاب من السنة السابقة مؤهلون لإعادة التسجيل.",
+      "unknown_year": "سنة غير معروفة",
+      "last_year": "آخر سنة",
+      "last_level": "آخر مستوى",
+      "change_selection": "تغيير",
+      "confirm": "تسجيل في السنة الجاري",
+      "level_label": "المستوى للسنة الجاري",
+      "level_default": "نفس مستوى السنة السابقة",
+      "level_hint": "إنشاء التسجيل يولد تلقائيًا البيان المالي للسنة الجاري برسوم البرنامج.",
+      "success": "تم تسجيل الطالب للسنة الجاري.",
+      "error_default": "خطأ أثناء إعادة التسجيل."
+    },
+    "summary": {
+      "label": "ملخص الطلاب",
+    "total": "الإجمالي",
+    "active": "النشطون",
+    "graduated": "الخريجون",
+    "suspended": "الموقوفون",
+    "loading": "جارٍ تحميل ملخص الطلاب",
+    "error_title": "تعذر تحميل الملخص",
+    "error_description": "المؤشرات غير متاحة. تظل قائمة الطلاب متاحة."
+    },
+    "search_placeholder": "البحث بالاسم، الرقم الجامعي، البريد الإلكتروني...",
+    "filters": {
+      "label": "مرشحات الطلاب",
+      "search": "البحث",
+      "program": "البرنامج",
+      "level": "المستوى",
+      "status": "الحالة",
+      "scope": "الفترة",
+      "all_programs": "جميع البرامج",
+      "all_levels": "جميع المستويات",
+      "all_status": "جميع الحالات",
+      "current_year_only": "السنة الحالية فقط",
+      "all_years": "جميع السنوات",
+      "clear": "مسح المرشحات",
+      "active": "نشط",
+      "graduated": "تخرج",
+      "suspended": "موقوف",
+      "dropped": "منقطع",
+      "chips": {
+        "search": "البحث: {{value}}",
+        "program": "البرنامج: {{value}}",
+        "level": "المستوى: {{value}}",
+        "status": "الحالة: {{value}}"
+      }
+    },
+    "table": {
+      "student": "الطالب",
+      "matricule": "الرقم الجامعي",
+      "academic": "المسار الأكاديمي",
+      "program": "البرنامج",
+      "level": "المستوى",
+      "enrollment": "التسجيل",
+      "status": "الحالة",
+      "actions": "إجراءات"
+    },
+    "selection": {
+      "actions": "إجراءات العناصر المحددة",
+      "selected": "تم تحديد {{count}} طالب",
+      "select_all": "تحديد جميع الطلاب",
+      "select_student": "تحديد {{name}}"
+    },
+    "loading": "جارٍ تحميل الطلاب",
+    "refreshing": "جارٍ تحديث الطلاب",
+    "error": {
+      "title": "تعذر تحميل الطلاب",
+      "description": "تحقق من اتصالك ثم أعد المحاولة."
+    },
+    "restricted": {
+      "title": "وصول مقيّد",
+      "description": "دورك لا يسمح بعرض هذه القائمة."
+    },
+    "empty": {
+      "title": "لم يتم العثور على طلاب",
+      "subtitle": "عدّل المرشحات أو أضف طالبًا جديدًا."
+    },
+    "errors": {
+      "options": "تعذر تحميل خيارات البرنامج والمستوى.",
+      "id_card": "حدث خطأ أثناء تحميل بطاقة الطالب.",
+      "bulk_id_cards": "حدث خطأ أثناء التحميل الجماعي للبطاقات.",
+      "export": "حدث خطأ أثناء تصدير ملف Excel."
+    },
+    "import_dialog": {
+      "title": "استيراد الطلاب (Excel)",
+      "description": "استورد الطلاب من نموذج Excel الرسمي.",
+      "instruction": "استخدم النموذج الرسمي لضمان تنسيق البيانات بشكل صحيح.",
+      "download_template": "تحميل النموذج",
+      "file_label": "ملف Excel (.xlsx)",
+      "choose_file": "اختيار ملف",
+      "drag_hint": "أو اسحب الملف وأفلته",
+      "file_limit": "ملف XLSX حتى 10 ميغابايت",
+      "selected_file": "الملف المحدد: {{name}}",
+      "missing_file": "يرجى اختيار ملف Excel.",
+      "generic_error": "حدث خطأ أثناء الاستيراد.",
+      "results_title": "نتائج الاستيراد",
+      "success_count": "تم إنشاء أو تحديث {{count}} طالب(ة) بنجاح.",
+      "errors_count": "الأخطاء ({{count}}):",
+      "close": "إغلاق",
+      "start": "بدء الاستيراد"
+    },
+    "form": {
+      "title_new": "طالب جديد",
+      "title_edit": "تعديل الطالب",
+      "new_eyebrow": "تسجيل جديد",
+      "edit_eyebrow": "تحديث ملف الطالب",
+      "steps": {
+        "identity": "الهوية",
+        "academic": "الدراسة",
+        "progress": "تقدم النموذج"
+      },
+      "sections": {
+        "user_info": "معلومات المستخدم",
+        "user_description": "هوية الطالب وبيانات الاتصال والصورة الشخصية.",
+        "academic_info": "المعلومات الأكاديمية",
+        "academic_description": "البرنامج والمستوى ومعلومات التسجيل."
+      },
+      "labels": {
+        "first_name": "الاسم الأول (بالفرنسية)",
+        "last_name": "اللقب (بالفرنسية)",
+        "first_name_ar": "الاسم الأول (بالعربية)",
+        "last_name_ar": "اللقب (بالعربية)",
+        "email": "البريد الإلكتروني",
+        "username": "اسم المستخدم",
+        "date_of_birth": "تاريخ الميلاد",
+        "gender": "الجنس",
+        "photo": "صورة الملف الشخصي",
+        "photo_preview": "معاينة الصورة",
+        "program": "البرنامج",
+        "level": "المستوى",
+        "enrollment_date": "تاريخ التسجيل",
+        "guardian_name": "اسم الولي",
+        "phone": "الهاتف",
+        "address": "العنوان (بالفرنسية)",
+        "address_ar": "العنوان (بالعربية)"
+      },
+      "placeholders": {
+        "select": "اختر"
+      },
+      "buttons": {
         "next": "التالي",
-        "showing": "عرض {{current}} من {{total}}",
-        "active": "نشط",
-        "user_manual": "دليل المستخدم"
+        "prev": "السابق",
+        "create": "إنشاء الطالب",
+        "update": "حفظ",
+        "save_changes": "حفظ التعديلات"
+      },
+      "notes": {
+        "password_admin": "يجب تغيير كلمة المرور من خلال إدارة المستخدمين.",
+        "password_auto": "سيتم إنشاء كلمة المرور تلقائيًا (الاسم الأولاللقب@السنة).",
+        "matricule_auto": "سيتم إنشاء الرقم الجامعي تلقائيًا (مثال: FST1920MA007817).",
+        "photo_hint": "JPG أو PNG أو WebP، بحد أقصى 5 ميغابايت. سيتم تحديث بطاقة الطالب تلقائيًا."
+      },
+      "errors": {
+        "required_fields": "يرجى ملء جميع الحقول المطلوبة",
+        "save_error": "خطأ أثناء الحفظ",
+        "photo_type": "يرجى اختيار صورة صالحة.",
+        "photo_size": "يجب ألا يتجاوز حجم الصورة 5 ميغابايت.",
+        "summary_label": "أخطاء النموذج"
+      },
+      "unsaved": {
+        "title": "تغييرات غير محفوظة",
+        "description": "ستفقد تعديلاتك إذا أغلقت هذا النموذج.",
+        "discard": "تجاهل التعديلات",
+        "keep_editing": "متابعة التعديل"
+      }
+    },
+    "details": {
+      "profile": "ملف الطالب",
+      "tabs": {
+        "info": "معلومات",
+        "enrollments": "التسجيلات",
+        "grades": "الدرجات",
+        "attendance": "الحضور",
+        "bulletins": "الكشوف",
+        "finance": "المالية",
+        "idcard": "بطاقة الطالب"
+      },
+      "info": {
+        "program": "البرنامج",
+        "level": "المستوى",
+        "status": "الحالة",
+        "enrollment_date": "تاريخ التسجيل"
+      },
+      "enrollments": {
+        "empty": "لم يتم العثور على تسجيلات"
+      },
+      "grades": {
+        "course": "المقرر",
+        "type": "النوع",
+        "grade": "الدرجة",
+        "date": "التاريخ",
+        "empty": "لم يتم العثور على درجات امتحانات",
+        "undefined": "غير محدد"
+      },
+      "attendance": {
+        "total": "إجمالي الجلسات",
+        "present": "حاضر",
+        "absent": "غائب",
+        "late": "متأخر",
+        "rate": "نسبة الحضور"
+      },
+      "bulletins": {
+        "empty": "لا توجد كشوف متاحة",
+        "refresh": "تحديث",
+        "bulletin": "كشف",
+        "count_zero": "لا كشوف",
+        "count_one": "كشف واحد",
+        "count_two": "كشفان",
+        "count_few": "{{count}} كشوف",
+        "count_many": "{{count}} كشفًا",
+        "count_other": "{{count}} كشف",
+        "published": "منشور",
+        "average": "المعدل",
+        "credits": "الأرصدة",
+        "rank": "الترتيب",
+        "generated_at": "تم الإنشاء في",
+        "download": "تحميل PDF"
+      },
+      "finance": {
+        "total_due": "إجمالي المستحق",
+        "total_paid": "إجمالي المدفوع",
+        "remaining": "المتبقي",
+        "history": "سجل المعاملات",
+        "download_statement": "تحميل الكشف",
+        "empty": "لا توجد معاملات"
+      },
+      "idcard": {
+        "title": "بطاقة الطالب",
+        "download": "تحميل البطاقة",
+        "loading": "جاري تحميل البطاقة..."
+      }
+    }
+  },
+  "teachers": {
+    "title": "إدارة الأساتذة",
+    "subtitle": "إدارة هيئة التدريس وتعييناتهم",
+    "actions": {
+      "new_teacher": "أستاذ جديد",
+      "edit": "تعديل",
+      "view": "عرض"
+    },
+    "search_placeholder": "البحث عن أستاذ...",
+    "filters": {
+      "all_ranks": "جميع الدرجات",
+      "assistant": "مساعد",
+      "lecturer": "أستاذ مساعد",
+      "senior_lecturer": "أستاذ محاضر",
+      "associate_professor": "أستاذ مشارك",
+      "professor": "أستاذ"
+    },
+    "tabs": {
+      "info": "المعلومات",
+      "courses": "الدورات",
+      "schedule": "الجدول الزمني"
+    },
+    "details": {
+      "email": "البريد الإلكتروني",
+      "department": "القسم",
+      "specialization": "التخصص",
+      "contract_type": "نوع العقد",
+      "hire_date": "تاريخ التوظيف",
+      "status": "الحالة",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "not_assigned": "غير معين",
+      "not_specified": "غير محدد",
+      "primary": "أساسي",
+      "secondary": "ثانوي",
+      "empty_courses": "لا توجد دورات معينة",
+      "empty_schedule": "لا يوجد جدول زمني متاح"
+    },
+    "empty": "لم يتم العثور على أساتذة",
+    "form": {
+      "title_new": "أستاذ جديد",
+      "title_edit": "تعديل الأستاذ",
+      "sections": {
+        "user_info": "معلومات المستخدم",
+        "pro_info": "المعلومات المهنية",
+        "edit_pro_info": "تعديل المعلومات المهنية"
+      },
+      "labels": {
+        "first_name": "الاسم الأول *",
+        "last_name": "اللقب *",
+        "email": "البريد الإلكتروني *",
+        "username": "اسم المستخدم *",
+        "date_of_birth": "تاريخ الميلاد *",
+        "gender": "الجنس",
+        "department": "القسم",
+        "rank": "الرتبة",
+        "contract_type": "نوع العقد",
+        "hire_date": "تاريخ التوظيف",
+        "specialization": "التخصص",
+        "office": "المكتب",
+        "active_teacher": "أستاذ نشط"
+      },
+      "options": {
+        "male": "ذكر",
+        "female": "أنثى",
+        "select": "اختيار",
+        "permanent": "دائم",
+        "contract": "متعاقد",
+        "visiting": "زائر",
+        "part_time": "دوام جزئي"
+      },
+      "notes": {
+        "password_auto": "سيتم إنشاء كلمة المرور تلقائيًا (الاسم واللقب@السنة). يمكن للمستخدم تغييرها لاحقًا.",
+        "matricule_auto": "سيتم إنشاء الرقم الوظيفي للأستاذ تلقائيًا."
+      },
+      "buttons": {
+        "next": "التالي",
+        "prev": "السابق",
+        "create": "إنشاء الأستاذ",
+        "save": "حفظ التعديلات"
+      },
+      "errors": {
+        "required_fields": "يرجى ملء جميع الحقول المطلوبة",
+        "save_error": "خطأ أثناء الحفظ"
+      }
+    }
+  },
+  "courses": {
+    "title": "إدارة الدورات",
+    "subtitle": "تنظيم المواد والوحدات والحجم الساعي والمسارات الأكاديمية.",
+    "actions": {
+      "new_course": "دورة جديدة",
+      "edit": "تعديل",
+      "delete": "حذف"
+    },
+    "delete_confirm": "هل تريد حذف المقرر {{code}} — {{name}} نهائيًا؟",
+    "stats": {
+      "total": "المقررات المطابقة",
+      "visible_active": "النشطة في هذه الصفحة",
+      "visible_credits": "الوحدات في هذه الصفحة",
+      "visible_hours": "الساعات في هذه الصفحة"
+    },
+    "search_placeholder": "البحث بالرمز أو الاسم أو الوصف...",
+    "filters": {
+      "all_programs": "جميع البرامج",
+      "all_levels": "جميع المستويات",
+      "all_semesters": "جميع الفصول",
+      "all_types": "جميع الأنواع",
+      "required": "إجباري",
+      "elective": "اختياري",
+      "practical": "أعمال تطبيقية",
+      "program": "البرنامج",
+      "level": "المستوى",
+      "semester": "الفصل",
+      "type": "نوع المقرر",
+      "active_count": "{{count}} مرشح نشط",
+      "reset": "إعادة تعيين المرشحات"
+    },
+    "semesters": {
+      "s1": "الفصل الأول",
+      "s2": "الفصل الثاني"
+    },
+    "table": {
+      "code": "الرمز",
+      "name": "اسم الدورة",
+      "course": "المقرر",
+      "program": "البرنامج",
+      "level": "المستوى",
+      "sem": "فصل",
+      "type": "النوع",
+      "credits": "الوحدات",
+      "hours": "الساعات",
+      "coef": "المعامل",
+      "academic_context": "المسار الأكاديمي",
+      "type_status": "النوع والحالة",
+      "value": "الوحدات / المعامل",
+      "workload": "الحجم الساعي",
+      "total": "في المجموع",
+      "actions": "إجراءات"
+    },
+    "empty": "لم يتم العثور على مقررات",
+    "empty_description": "غيّر المرشحات أو أضف مادة جديدة إلى الدليل.",
+    "errors": {
+      "load": "تعذر تحميل المقررات.",
+      "delete": "تعذر حذف هذا المقرر."
+    },
+    "form": {
+      "eyebrow": "الدليل الأكاديمي",
+      "title_new": "مقرر جديد",
+      "title_edit": "تعديل المقرر",
+      "subtitle": "أدخل المسار والقيمة الأكاديمية والحجم الساعي.",
+      "sections": {
+        "identity": "تعريف المقرر",
+        "identity_hint": "رمز فريد واسم رسمي",
+        "academic": "التصنيف الأكاديمي",
+        "academic_hint": "البرنامج والمستوى والفصل ونوع المقرر",
+        "value": "الوحدات والحجم الساعي",
+        "value_hint": "الوزن والتوزيع البيداغوجي"
+      },
+      "labels": {
+        "code": "رمز المقرر",
+        "name": "اسم المقرر",
+        "program": "البرنامج",
+        "level": "المستوى",
+        "semester": "الفصل",
+        "type": "نوع المقرر",
+        "credits": "الوحدات",
+        "coefficient": "المعامل",
+        "hours_lecture": "ساعات المحاضرات",
+        "hours_tutorial": "ساعات الأعمال الموجهة",
+        "hours_practical": "ساعات الأعمال التطبيقية",
+        "description": "الوصف",
+        "is_active": "مقرر نشط"
+      },
+      "placeholders": {
+        "code": "مثال: INF101",
+        "name": "مثال: مقدمة في الإعلام الآلي",
+        "select_program": "اختر برنامجًا",
+        "select_level": "اختر مستوى",
+        "select_program_first": "اختر البرنامج أولًا",
+        "description": "الأهداف والمحتوى أو معلومات إضافية..."
+      },
+      "active_hint": "يظهر المقرر في الدليل وقوائم الاختيار.",
+      "total": "في المجموع",
+      "create": "إنشاء المقرر",
+      "update": "تحديث",
+      "errors": {
+        "save": "تعذر حفظ المقرر."
+      }
+    }
+  },
+  "grades": {
+    "header_eyebrow": "المتابعة الأكاديمية",
+    "subtitle": "متابعة النتائج والتقييمات وتطور أداء الطلاب.",
+    "title_final": "الدرجات النهائية للطلاب",
+    "title_evaluation": "الدرجات حسب التقييم",
+    "entry_title": "إدخال الدرجات",
+    "labels": {
+      "course": "الدورة",
+      "semester": "الفصل الدراسي",
+      "eval_type": "نوع التقييم",
+      "search_student": "البحث عن طالب",
+      "view_mode": "عرض"
+    },
+    "placeholders": {
+      "select_course": "اختر دورة",
+      "select_semester": "اختر فصلاً دراسياً",
+      "student_search": "الاسم أو الرقم الجامعي..."
+    },
+    "empty": "يرجى اختيار دورة وفصل دراسي لعرض الدرجات",
+    "buttons": {
+      "enter_grades": "إدخال الدرجات",
+      "calculate_final": "حساب الدرجات النهائية",
+      "final_grades": "الدرجات النهائية",
+      "by_evaluation": "حسب التقييم",
+      "clear_filter": "مسح المرشح",
+      "import_excel": "استيراد Excel",
+      "export_excel": "تصدير Excel",
+      "view_history": "عرض السجل",
+      "progression": "التطور",
+      "my_progression": "عرض تطوري",
+      "generate": "توليد"
+    },
+    "import": {
+      "title": "استيراد الدرجات",
+      "instructions": "قم بتحميل نموذج Excel، واملأ الدرجات ثم استورده هنا.",
+      "download_template": "تحميل النموذج",
+      "select_file": "اختر ملف Excel",
+      "btn_import": "استيراد",
+      "created": "تم إنشاؤها",
+      "updated": "تم تحديثها",
+      "errors": "الأخطاء المكتشفة"
+    },
+    "history": {
+      "title": "كشف درجات تفصيلي",
+      "avg": "المعدل",
+      "exams": "الامتحانات",
+      "absences": "الغتحانات",
+      "best": "أفضل درجة",
+      "no_data": "لم يتم العثور على بيانات"
+    },
+    "progress": {
+      "eyebrow": "التطور الأكاديمي",
+      "average": "المعدل الموحّد",
+      "pass_rate": "نسبة النجاح",
+      "evaluations": "التقييمات",
+      "trend": "الاتجاه الأخير",
+      "timeline": "التسلسل الزمني",
+      "chart_title": "تطور نتائج الامتحانات والاختبارات",
+      "chart_hint": "تم تحويل جميع الدرجات إلى مقياس من 20 للمقارنة العادلة.",
+      "pass_mark": "حد النجاح · 10/20",
+      "all_courses": "جميع المقررات",
+      "all_types": "جميع الأنواع",
+      "passed": "ناجح",
+      "not_passed": "دون المعدل",
+      "absent": "غائب",
+      "results": "نتيجة",
+      "by_type": "الأداء حسب نوع التقييم",
+      "details": "تفاصيل التقييمات",
+      "no_chart_data": "لا توجد تقييمات لهذه المرشحات.",
+      "load_error": "تعذر تحميل تطور أداء هذا الطالب."
+    },
+    "errors": {
+      "select_exam_for_import": "يرجى اختيار امتحان موجود أولاً في نموذج الإدخال لاستيراد الدرجات.",
+      "select_exam_for_export": "يرجى اختيار امتحان موجود أولاً (عبر إدخال الدرجات)"
+    },
+    "table": {
+      "matricule": "الرقم الجامعي",
+      "student": "الطالب",
+      "name": "الاسم",
+      "score": "الدرجة",
+      "absent": "غائب",
+      "remarks": "ملاحظات",
+      "mention": "التقدير",
+      "status": "الحالة",
+      "bulletin": "الكشف"
+    }
+  },
+  "deliberation": {
+    "title": "المداولات السنوية",
+    "labels": {
+      "academic_year": "السنة الجامعية",
+      "program": "البرنامج"
+    },
+    "button": {
+      "start": "بدء المداولات",
+      "processing": "جاري المعالجة..."
+    },
+    "results": {
+      "title": "النتائج",
+      "table": {
+        "matricule": "الرقم الجامعي",
+        "student": "الطالب",
+        "annual_average": "المعدل السنوي",
+        "decision": "القرار",
+        "info": "معلومات"
+      }
+    }
+  },
+  "scheduling": {
+    "title": "الجدول الزمني",
+    "week_days": {
+      "monday": "الاثنين",
+      "tuesday": "الثلاثاء",
+      "wednesday": "الأربعاء",
+      "thursday": "الخميس",
+      "friday": "الجمعة",
+      "saturday": "السبت",
+      "sunday": "الأحد"
+    },
+    "views": {
+      "week": "أسبوع",
+      "list": "قائمة"
+    },
+    "filters": {
+      "semester": "الفصل الدراسي",
+      "program": "البرنامج",
+      "teacher": "الأستاذ",
+      "select_semester": "اختر فصلاً دراسياً",
+      "all_programs": "جميع البرامج",
+      "all_teachers": "جميع الأساتذة",
+      "reset": "إعادة تعيين"
+    },
+    "actions": {
+      "add_slot": "إضافة حصة",
+      "export_pdf": "تصدير PDF"
+    },
+    "modal": {
+      "title": "إضافة حصة",
+      "course": "المقرر",
+      "classroom": "القاعة",
+      "day": "اليوم",
+      "start_time": "وقت البدء",
+      "end_time": "وقت الانتهاء",
+      "active": "نشط",
+      "cancel": "إلغاء",
+      "add": "إضافة"
+    },
+    "empty": {
+      "no_course": "لا توجد دورات",
+      "no_course_found": "لم يتم العثور على دورات للمرشحات المحددة."
+    }
+  },
+  "announcements": {
+    "title": "الإعلانات",
+    "actions": {
+      "new": "إعلان جديد",
+      "edit": "تعديل",
+      "delete": "حذف"
+    },
+    "filters": {
+      "all_types": "جميع الأنواع",
+      "all_audiences": "جميع الجماهير"
+    },
+    "types": {
+      "general": "عام",
+      "academic": "أكاديمي",
+      "financial": "مالي",
+      "exam": "امتحانات",
+      "event": "حدث"
+    },
+    "audiences": {
+      "all": "الكل",
+      "students": "الطلاب",
+      "teachers": "الأساتذة",
+      "staff": "الموظفين"
+    },
+    "badges": {
+      "published": "منشور",
+      "draft": "مسودة",
+      "pinned": "مثبت"
+    },
+    "modal": {
+      "title_new": "إعلان جديد",
+      "title_edit": "تعديل الإعلان",
+      "form": {
+        "title": "العنوان",
+        "content": "المحتوى",
+        "type": "النوع",
+        "audience": "الجمهور المستهدف",
+        "faculty": "الكلية (اختياري)",
+        "program": "البرنامج (اختياري)",
+        "pin": "تثبيت الإعلان",
+        "publish": "نشر فوري",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "update": "تحديث"
+      }
+    },
+    "empty": "لم يتم العثور على إعلانات"
+  },
+  "finance": {
+    "title": "الإدارة المالية",
+    "subtitle": "تتبع الإيرادات والمصروفات",
+    "header_eyebrow": "التسيير الإداري",
+    "tabs": {
+      "dashboard": "لوحة القيادة",
+      "payments": "المدفوعات",
+      "salaries": "الرواتب",
+      "expenses": "النفقات",
+      "debts": "الديون",
+      "recovery": "التحصيل"
     },
     "dashboard": {
-        "welcome": {
-            "morning": "صباح الخير",
-            "afternoon": "طاب مساؤك",
-            "evening": "مساء الخير"
-        },
-        "subtitle": "إليك نظرة عامة على مساحتك • {{date}}",
-        "stats": {
-            "students_enrolled": "الطلاب المسجلين",
-            "teachers": "الأساتذة",
-            "programs": "الشعب / البرامج",
-            "revenue": "الإيرادات المحصلة",
-            "my_courses": "دوراتي",
-            "pending_grades": "درجات قيد الانتظار",
-            "gpa": "المعدل التراكمي",
-            "credits_validated": "الوحدات التي تم التحقق منها",
-            "courses_enrolled": "الدورات المسجلة"
-        },
-        "sections": {
-            "recent_inscriptions": "التسجيلات الأخيرة",
-            "recent_payments": "المدفوعات الأخيرة",
-            "todays_schedule": "جدول اليوم",
-            "recent_grades": "أحدث الدرجات",
-            "view_all": "عرض الكل",
-            "no_inscriptions": "لا توجد تسجيلات حديثة",
-            "no_payments": "لا توجد مدفوعات حديثة",
-            "no_schedule": "لا توجد دورات اليوم",
-            "no_grades": "لا توجد درجات حديثة"
-        }
+      "annual": "سنوي",
+      "collected_revenue": "الإيرادات المحصلة",
+      "total_expenses": "إجمالي المصروفات",
+      "expected_revenue": "الإيرادات المتوقعة",
+      "salaries_paid": "الرواتب المدفوعة",
+      "outstanding": "المتبقي للتحصيل",
+      "financial_balance": "الميزانية المالية",
+      "net_balance": "صافي الرصيد (الإيرادات - الرواتب - النفقات)"
     },
-    "students": {
-        "title": "إدارة الطلاب",
-        "subtitle": "إجمالي {{count}} طالب",
-        "actions": {
-            "download_cards": "تحميل البطاقات",
-            "new_student": "طالب جديد"
-        },
-        "search_placeholder": "البحث بالاسم، الرقم الجامعي، البريد الإلكتروني...",
-        "filters": {
-            "all_status": "جميع الحالات",
-            "active": "نشط",
-            "graduated": "تخرج",
-            "suspended": "موثوق",
-            "dropped": "منقطع"
-        },
-        "table": {
-            "student": "الطالب",
-            "program": "البرنامج",
-            "level": "المستوى",
-            "status": "الحالة",
-            "actions": "إجراءات"
-        },
-        "empty": {
-            "title": "لم يتم العثور على طلاب",
-            "subtitle": "حاول تعديل معايير البحث الخاصة بك"
-        }
+    "analytics": {
+      "cash_flow": "تطور التدفقات المالية",
+      "cash_flow_hint": "التحصيل والرواتب والمصروفات شهريًا.",
+      "flows": "التدفقات",
+      "net_trend": "صافي الرصيد",
+      "revenue": "التحصيل",
+      "salaries": "الرواتب",
+      "expenses": "المصروفات",
+      "collection": "التحصيل",
+      "collection_rate": "نسبة التحصيل",
+      "collected": "تم تحصيله",
+      "total_outflow": "إجمالي المدفوعات",
+      "expense_breakdown": "توزيع المصروفات",
+      "expense_breakdown_hint": "حصة كل فئة من إجمالي المصروفات.",
+      "payment_methods": "طرق الدفع",
+      "payment_methods_hint": "مصادر المدفوعات المكتملة.",
+      "transactions": "معاملة",
+      "pending": "قيد الانتظار",
+      "no_chart_data": "لا توجد بيانات لهذه الفترة بعد.",
+      "no_expenses": "لا توجد مصروفات مسجلة.",
+      "no_payments": "لا توجد مدفوعات مكتملة."
     },
-    "teachers": {
-        "title": "إدارة الأساتذة",
-        "subtitle": "إدارة هيئة التدريس وتعييناتهم",
-        "actions": {
-            "new_teacher": "أستاذ جديد",
-            "edit": "تعديل",
-            "view": "عرض"
-        },
-        "search_placeholder": "البحث عن أستاذ...",
-        "filters": {
-            "all_ranks": "جميع الدرجات",
-            "assistant": "مساعد",
-            "lecturer": "أستاذ مساعد",
-            "senior_lecturer": "أستاذ محاضر",
-            "associate_professor": "أستاذ مشارك",
-            "professor": "أستاذ"
-        },
-        "tabs": {
-            "info": "المعلومات",
-            "courses": "الدورات",
-            "schedule": "الجدول الزمني"
-        },
-        "details": {
-            "email": "البريد الإلكتروني",
-            "department": "القسم",
-            "specialization": "التخصص",
-            "contract_type": "نوع العقد",
-            "hire_date": "تاريخ التوظيف",
-            "status": "الحالة",
-            "active": "نشط",
-            "inactive": "غير نشط"
-        },
-        "empty": "لم يتم العثور على أساتذة"
+    "payments": {
+      "title": "سجل المدفوعات",
+      "new": "دفع جديد",
+      "delete": "حذف",
+      "destructive_action": "إجراء نهائي",
+      "delete_title": "حذف هذه الدفعة؟",
+      "delete_message": "سيؤدي هذا الإجراء إلى حذف الدفعة المحددة نهائيًا.",
+      "delete_balance_notice": "سيُعاد احتساب الرصيد المالي للطالب تلقائيًا.",
+      "confirm_delete": "حذف الدفعة",
+      "deleting": "جارٍ الحذف...",
+      "delete_error": "تعذر حذف هذه الدفعة. يرجى المحاولة مرة أخرى.",
+      "table": {
+        "reference": "المرجع",
+        "student": "الطالب",
+        "amount": "المبلغ",
+        "method": "طريقة الدفع",
+        "date": "التاريخ",
+        "status": "الحالة",
+        "actions": "إجراءات",
+        "validate": "تأكيد"
+      }
     },
-    "courses": {
-        "title": "إدارة الدورات",
-        "actions": {
-            "new_course": "دورة جديدة",
-            "edit": "تعديل",
-            "delete": "حذف"
-        },
-        "stats": {
-            "total": "إجمالي الدورات",
-            "required": "دورات إجبارية",
-            "elective": "دورات اختيارية",
-            "practical": "أعمال تطبيقية"
-        },
-        "search_placeholder": "البحث عن دورة...",
-        "filters": {
-            "all_programs": "جميع البرامج",
-            "all_types": "جميع الأنواع",
-            "required": "إجباري",
-            "elective": "اختياري",
-            "practical": "تطبيقي"
-        },
-        "table": {
-            "code": "الرمز",
-            "name": "اسم الدورة",
-            "program": "البرنامج",
-            "level": "المستوى",
-            "sem": "فصل",
-            "type": "النوع",
-            "credits": "الوحدات",
-            "hours": "الساعات",
-            "coef": "المعامل",
-            "actions": "إجراءات"
-        },
-        "empty": "لم يتم العثور على دورات"
+    "salaries": {
+      "title": "رواتب الموظفين",
+      "new": "راتب جديد",
+      "table": {
+        "employee": "الموظف",
+        "period": "الفترة",
+        "base": "الأساسي",
+        "bonuses": "المكافآت",
+        "deductions": "الخصومات",
+        "net": "الصافي",
+        "pay": "دفع"
+      }
     },
-    "grades": {
-        "title_final": "الدرجات النهائية للطلاب",
-        "title_evaluation": "الدرجات حسب التقييم",
-        "entry_title": "إدخال الدرجات",
-        "labels": {
-            "course": "الدورة",
-            "semester": "الفصل الدراسي",
-            "eval_type": "نوع التقييم",
-            "search_student": "البحث عن طالب",
-            "view_mode": "عرض"
+    "expenses": {
+      "title": "المصروفات والفواتير",
+      "new": "مصروف جديد",
+      "table": {
+        "date": "التاريخ",
+        "category": "الفئة",
+        "description": "الوصف",
+        "amount": "المبلغ"
+      }
+    },
+    "recovery": {
+      "title": "متابعة التحصيل (الطلاب)",
+      "table": {
+        "total_due": "إجمالي المستحق",
+        "paid": "المدفوع",
+        "remaining": "المتبقي",
+        "status": "الحالة",
+        "unpaid": "غير مدفوع"
+      }
+    },
+    "debts": {
+      "title": "ديون الطلاب (سنوات سابقة)",
+      "hint": "تتبع ديون السنوات السابقة غير المسجلة في النظام، للطلاب الملتحقين بعد أول تفعيل للمنصة.",
+      "new": "دانة جديدة",
+      "search_placeholder": "بحث عن طالب أو رقم قاعدي...",
+      "summary": {
+        "outstanding": "إجمالي المتبقي",
+        "open": "ديون مفتوحة",
+        "partial": "مسددة جزئيًا",
+        "paid": "ديون مسددة"
+      },
+      "filters": {
+        "all_status": "جميع الحالات"
+      },
+      "table": {
+        "student": "الطالب",
+        "academic_year": "السنة المعنية",
+        "amount_due": "المبلغ المستحق",
+        "amount_paid": "المدفوع",
+        "outstanding": "المتبقي",
+        "description": "الوصف"
+      },
+      "empty": "لا توجد ديون مسجلة",
+      "view_payments": "المدفوعات",
+      "record_payment": "دفع",
+      "delete": "حذف",
+      "delete_title": "حذف هذه الدانة؟",
+      "delete_message": "سيؤدي هذا الإجراء إلى حذف الدانة وسجل مدفوعاتها نهائيًا.",
+      "confirm_delete": "حذف الدانة",
+      "modals": {
+        "create": {
+          "title": "دانة جديدة",
+          "academic_year": "السنة المعنية",
+          "no_year": "غير محددة",
+          "current": "جارية",
+          "amount_due": "المبلغ المستحق",
+          "description": "الوصف",
+          "description_placeholder": "مثال: رسوم دراسية غير مدفوعة للسنة 2023-2024"
         },
-        "placeholders": {
-            "select_course": "اختر دورة",
-            "select_semester": "اختر فصلاً دراسياً",
-            "student_search": "الاسم أو الرقم الجامعي..."
-        },
-        "empty": "يرجى اختيار دورة وفصل دراسي لعرض الدرجات",
-        "buttons": {
-            "enter_grades": "إدخال الدرجات",
-            "calculate_final": "حساب الدرجات النهائية",
-            "final_grades": "الدرجات النهائية",
-            "by_evaluation": "حسب التقييم",
-            "clear_filter": "مسح المرشح",
-            "import_excel": "استيراد Excel",
-            "export_excel": "تصدير Excel",
-            "view_history": "عرض السجل",
-            "generate": "توليد"
-        },
-        "import": {
-            "title": "استيراد الدرجات",
-            "instructions": "قم بتحميل نموذج Excel، واملأ الدرجات ثم استورده هنا.",
-            "download_template": "تحميل النموذج",
-            "select_file": "اختر ملف Excel",
-            "btn_import": "استيراد",
-            "created": "تم إنشاؤها",
-            "updated": "تم تحديثها",
-            "errors": "الأخطاء المكتشفة"
+        "pay": {
+          "title": "دفع على الدانة",
+          "remaining": "المتبقي للدفع",
+          "amount": "المبلغ المدفوع",
+          "date": "تاريخ الدفع",
+          "method": "طريقة الدفع",
+          "notes": "ملاحظات",
+          "submit": "تسجيل الدفع"
         },
         "history": {
-            "title": "كشف درجات تفصيلي",
-            "avg": "المعدل",
-            "exams": "الامتحانات",
-            "absences": "الغتحانات",
-            "best": "أفضل درجة",
-            "no_data": "لم يتم العثور على بيانات"
-        },
-        "errors": {
-            "select_exam_for_import": "يرجى اختيار امتحان موجود أولاً في نموذج الإدخال لاستيراد الدرجات.",
-            "select_exam_for_export": "يرجى اختيار امتحان موجود أولاً (عبر إدخال الدرجات)"
-        },
-        "table": {
-            "matricule": "الرقم الجامعي",
-            "student": "الطالب",
-            "name": "الاسم",
-            "score": "الدرجة",
-            "absent": "غائب",
-            "remarks": "ملاحظات",
-            "mention": "التقدير",
-            "status": "الحالة",
-            "bulletin": "الكشف"
+          "title": "سجل المدفوعات",
+          "empty": "لا توجد مدفوعات مسجلة لهذه الدانة.",
+          "remove_payment": "إزالة هذا الدفع"
         }
+      }
     },
-    "deliberation": {
-        "title": "المداولات السنوية",
-        "labels": {
-            "academic_year": "السنة الجامعية",
-            "program": "البرنامج"
-        },
-        "button": {
-            "start": "بدء المداولات",
-            "processing": "جاري المعالجة..."
-        },
-        "results": {
-            "title": "النتائج",
-            "table": {
-                "matricule": "الرقم الجامعي",
-                "student": "الطالب",
-                "annual_average": "المعدل السنوي",
-                "decision": "القرار",
-                "info": "معلومات"
-            }
-        }
+    "debt_status": {
+      "OPEN": "غير مسددة",
+      "PARTIAL": "مسددة جزئيًا",
+      "PAID": "مسددة"
     },
-    "scheduling": {
-        "title": "الجدول الزمني",
-        "week_days": {
-            "monday": "الاثنين",
-            "tuesday": "الثلاثاء",
-            "wednesday": "الأربعاء",
-            "thursday": "الخميس",
-            "friday": "الجمعة",
-            "saturday": "السبت",
-            "sunday": "الأحد"
-        },
-        "views": {
-            "week": "أسبوع",
-            "list": "قائمة"
-        },
-        "filters": {
-            "semester": "الفصل الدراسي",
-            "program": "البرنامج",
-            "teacher": "الأستاذ",
-            "select_semester": "اختر فصلاً دراسياً",
-            "all_programs": "جميع البرامج",
-            "all_teachers": "جميع الأساتذة",
-            "reset": "إعادة تعيين"
-        },
-        "actions": {
-            "add_slot": "إضافة حصة",
-            "export_pdf": "تصدير PDF"
-        },
-        "modal": {
-            "title": "إضافة حصة",
-            "course": "المقرر",
-            "classroom": "القاعة",
-            "day": "اليوم",
-            "start_time": "وقت البدء",
-            "end_time": "وقت الانتهاء",
-            "active": "نشط",
-            "cancel": "إلغاء",
-            "add": "إضافة"
-        },
-        "empty": {
-            "no_course": "لا توجد دورات",
-            "no_course_found": "لم يتم العثور على دورات للمرشحات المحددة."
-        }
+    "debt_payment_methods": {
+      "OTHER": "أخرى"
     },
-    "announcements": {
-        "title": "الإعلانات",
-        "actions": {
-            "new": "إعلان جديد",
-            "edit": "تعديل",
-            "delete": "حذف"
-        },
-        "filters": {
-            "all_types": "جميع الأنواع",
-            "all_audiences": "جميع الجماهير"
-        },
-        "types": {
-            "general": "عام",
-            "academic": "أكاديمي",
-            "financial": "مالي",
-            "exam": "امتحانات",
-            "event": "حدث"
-        },
-        "audiences": {
-            "all": "الكل",
-            "students": "الطلاب",
-            "teachers": "الأساتذة",
-            "staff": "الموظفين"
-        },
-        "badges": {
-            "published": "منشور",
-            "draft": "مسودة",
-            "pinned": "مثبت"
-        },
-        "modal": {
-            "title_new": "إعلان جديد",
-            "title_edit": "تعديل الإعلان",
-            "form": {
-                "title": "العنوان",
-                "content": "المحتوى",
-                "type": "النوع",
-                "audience": "الجمهور المستهدف",
-                "faculty": "الكلية (اختياري)",
-                "program": "البرنامج (اختياري)",
-                "pin": "تثبيت الإعلان",
-                "publish": "نشر فوري",
-                "cancel": "إلغاء",
-                "save": "حفظ",
-                "update": "تحديث"
-            }
-        },
-        "empty": "لم يتم العثور على إعلانات"
-    },
-    "finance": {
-        "title": "الإدارة المالية",
-        "subtitle": "تتبع الإيرادات والمصروفات",
-        "tabs": {
-            "dashboard": "لوحة القيادة",
-            "payments": "المدفوعات",
-            "salaries": "الرواتب",
-            "expenses": "النفقات",
-            "recovery": "التحصيل"
-        },
-        "dashboard": {
-            "annual": "سنوي",
-            "collected_revenue": "الإيرادات المحصلة",
-            "total_expenses": "إجمالي المصروفات",
-            "expected_revenue": "الإيرادات المتوقعة",
-            "salaries_paid": "الرواتب المدفوعة",
-            "outstanding": "المتبقي للتحصيل",
-            "financial_balance": "الميزانية المالية",
-            "net_balance": "صافي الرصيد (الإيرادات - الرواتب - النفقات)"
-        },
-        "payments": {
-            "title": "سجل المدفوعات",
-            "new": "دفع جديد",
-            "table": {
-                "reference": "المرجع",
-                "student": "الطالب",
-                "amount": "المبلغ",
-                "method": "طريقة الدفع",
-                "date": "التاريخ",
-                "status": "الحالة",
-                "actions": "إجراءات",
-                "validate": "تأكيد"
-            }
-        },
-        "salaries": {
-            "title": "رواتب الموظفين",
-            "new": "راتب جديد",
-            "table": {
-                "employee": "الموظف",
-                "period": "الفترة",
-                "base": "الأساسي",
-                "bonuses": "المكافآت",
-                "deductions": "الخصومات",
-                "net": "الصافي",
-                "pay": "دفع"
-            }
-        },
-        "expenses": {
-            "title": "المصروفات والفواتير",
-            "new": "مصروف جديد",
-            "table": {
-                "date": "التاريخ",
-                "category": "الفئة",
-                "description": "الوصف",
-                "amount": "المبلغ"
-            }
-        },
-        "recovery": {
-            "title": "متابعة التحصيل (الطلاب)",
-            "table": {
-                "total_due": "إجمالي المستحق",
-                "paid": "المدفوع",
-                "remaining": "المتبقي",
-                "status": "الحالة",
-                "unpaid": "غير مدفوع"
-            }
-        },
-        "modals": {
-            "payment": {
-                "title": "دفع جديد",
-                "method": "طريقة الدفع",
-                "financial_situation": "الوضع المالي",
-                "program_cost": "تكلفة البرنامج",
-                "already_paid": "مدفوع مسبقاً",
-                "remaining": "المتبقي للدفع",
-                "pay_balance": "دفع الرصيد"
-            },
-            "salary": {
-                "title": "راتب جديد",
-                "base_salary": "الراتب الأساسي",
-                "remarks": "ملاحظات"
-            },
-            "expense": {
-                "title": "مصروف جديد"
-            }
-        }
-    },
-    "structure": {
-        "faculties": {
-            "title": "الكليات",
-            "subtitle": "إدارة كليات الجامعة",
-            "actions": {
-                "new": "كلية جديدة"
-            },
-            "search_placeholder": "البحث عن كلية...",
-            "table": {
-                "code": "الرمز",
-                "name": "الاسم",
-                "description": "الوصف",
-                "departments": "الأقسام",
-                "actions": "إجراءات"
-            },
-            "modal": {
-                "title_new": "كلية جديدة",
-                "title_edit": "تعديل الكلية",
-                "name": "الاسم",
-                "code": "الرمز",
-                "description": "الوصف",
-                "cancel": "إلغاء",
-                "create": "إنشاء",
-                "update": "تحديث"
-            }
-        },
-        "departments": {
-            "title": "الأقسام",
-            "subtitle": "إدارة الأقسام حسب الكلية",
-            "actions": {
-                "new": "قسم جديد"
-            },
-            "search_placeholder": "البحث عن قسم...",
-            "filters": {
-                "all_faculties": "جميع الكليات",
-                "select_faculty": "اختر كلية"
-            },
-            "table": {
-                "code": "الرمز",
-                "name": "الاسم",
-                "faculty": "الكلية",
-                "stats": "الإحصائيات",
-                "actions": "إجراءات"
-            },
-            "modal": {
-                "title_new": "قسم جديد",
-                "title_edit": "تعديل القسم",
-                "faculty": "الكلية",
-                "name": "الاسم",
-                "code": "الرمز",
-                "description": "الوصف",
-                "cancel": "إلغاء",
-                "create": "إنشاء",
-                "update": "تحديث"
-            }
-        },
-        "programs": {
-            "title": "البرامج (الشعب)",
-            "subtitle": "إدارة البرامج الأكاديمية",
-            "actions": {
-                "new": "برنامج جديد"
-            },
-            "search_placeholder": "البحث عن برنامج...",
-            "filters": {
-                "all_departments": "جميع الأقسام",
-                "select_department": "اختر قسماً"
-            },
-            "table": {
-                "code": "الرمز",
-                "name": "الاسم",
-                "department": "القسم",
-                "level": "المستوى",
-                "students": "الطلاب",
-                "actions": "إجراءات"
-            },
-            "modal": {
-                "title_new": "برنامج جديد",
-                "title_edit": "تعديل البرنامج",
-                "department": "القسم",
-                "levels": "المستويات (اضغط Ctrl/Cmd للاختيار المتعدد)",
-                "name": "اسم البرنامج",
-                "code": "الرمز",
-                "duration": "المدة (بالسنوات)",
-                "tuition": "رسوم الدراسة",
-                "description": "الوصف",
-                "cancel": "إلغاء",
-                "create": "إنشاء",
-                "update": "تحديث"
-            }
-        },
-        "classrooms": {
-            "title": "قاعات الدراسة",
-            "subtitle": "إدارة القاعات وتوفرها",
-            "actions": {
-                "new": "قاعة جديدة"
-            },
-            "search_placeholder": "البحث عن قاعة...",
-            "table": {
-                "room": "القاعة",
-                "name": "الاسم",
-                "code": "الرمز",
-                "building": "المبنى",
-                "capacity": "السعة",
-                "equipment": "التجهيزات",
-                "status": "الحالة",
-                "actions": "إجراءات"
-            },
-            "features": {
-                "projector": "جهاز عرض",
-                "computers": "أجهزة كمبيوتر",
-                "available": "متاح",
-                "occupied": "مشغول"
-            },
-            "modal": {
-                "title_new": "قاعة جديدة",
-                "title_edit": "تعديل القاعة",
-                "code": "رمز القاعة",
-                "name": "الاسم",
-                "building": "المبنى",
-                "capacity": "السعة",
-                "has_projector": "جهاز عرض فيديو",
-                "has_computers": "مجهزة بأجهزة كمبيوتر",
-                "is_available": "قاعة متاحة",
-                "cancel": "إلغاء",
-                "create": "إنشاء",
-                "update": "تحديث"
-            },
-            "availability": {
-                "title": "التوفر",
-                "date": "التاريخ",
-                "time": "الوقت",
-                "check": "تحقق"
-            }
-        },
-        "levels": {
-            "title": "إدارة المستويات",
-            "subtitle": "تكوين المستويات الدراسية (ليسانس، ماستر، دكتوراه)",
-            "actions": {
-                "new": "مستوى جديد"
-            },
-            "empty": "لا توجد مستويات مكونة.",
-            "card": {
-                "order": "الترتيب"
-            },
-            "modal": {
-                "title_new": "مستوى جديد",
-                "title_edit": "تعديل المستوى",
-                "name": "المستوى",
-                "order": "الترتيب",
-                "order_hint": "يستخدم للفرز (مثال: L1=1, L2=2...)",
-                "cancel": "إلغاء",
-                "save": "حفظ",
-                "saving": "جاري الحفظ..."
-            }
-        },
-        "academic_years": {
-            "title": "السنوات الجامعية",
-            "subtitle": "إدارة التقويم الأكاديمي",
-            "actions": {
-                "new": "سنة جديدة",
-                "manage": "إدارة / تعديل",
-                "set_current": "تعيين كحاليه"
-            },
-            "status": {
-                "current": "الحالية"
-            },
-            "modal": {
-                "title_new": "سنة جامعية جديدة",
-                "title_edit": "إدارة السنة الجامعية",
-                "details_title": "تفاصيل السنة",
-                "name": "الاسم",
-                "name_placeholder": "مثال: 2025-2026",
-                "start_date": "تاريخ البدء",
-                "end_date": "تاريخ الانتهاء",
-                "create": "إنشاء السنة",
-                "update": "حفظ التعديلات",
-                "semesters_title": "الفصول الدراسية",
-                "add_semester": "إضافة فصل دراسي",
-                "no_semesters": "لم يتم تكوين فصول دراسية"
-            },
-            "semesters_table": {
-                "type": "النوع",
-                "dates": "التواريخ",
-                "status": "الحالة"
-            },
-            "semester_modal": {
-                "title": "إضافة فصل دراسي",
-                "type": "النوع",
-                "start_date": "تاريخ البدء",
-                "end_date": "تاريخ الانتهاء",
-                "cancel": "إلغاء",
-                "add": "إضافة"
-            }
-        }
-    },
-    "admin": {
-        "users": {
-            "title": "إدارة المستخدمين",
-            "subtitle": "إدارة حسابات المستخدمين وصلاحياتهم",
-            "actions": {
-                "new": "مستخدم جديد"
-            },
-            "table": {
-                "user": "المستخدم",
-                "role": "الدور",
-                "status": "الحالة",
-                "actions": "إجراءات"
-            },
-            "filters": {
-                "all_roles": "جميع الأدوار"
-            },
-            "modal": {
-                "title_new": "مستخدم جديد",
-                "title_edit": "تعديل المستخدم",
-                "title_password": "تغيير كلمة المرور",
-                "username": "اسم المستخدم",
-                "email": "البريد الإلكتروني",
-                "first_name": "الاسم الأول",
-                "last_name": "اللقب",
-                "role": "الدور",
-                "password": "كلمة المرور",
-                "password_confirm": "تأكيد كلمة المرور",
-                "old_password": "كلمة المرور القديمة",
-                "new_password": "كلمة المرور الجديدة",
-                "new_password_confirm": "تأكيد كلمة المرور الجديدة",
-                "phone": "الهاتف",
-                "address": "العنوان",
-                "gender": "الجنس",
-                "date_of_birth": "تاريخ الميلاد",
-                "is_active": "نشط",
-                "cancel": "إلغاء",
-                "create": "إنشاء المستخدم",
-                "update": "تحديث",
-                "change_password": "تغيير كلمة المرور"
-            },
-            "roles": {
-                "ADMIN": "مدير",
-                "DEAN": "عميد",
-                "TEACHER": "أستاذ",
-                "STUDENT": "طالب",
-                "ACCOUNTANT": "محاسب",
-                "SECRETARY": "سكرتير"
-            },
-            "gender": {
-                "M": "ذكر",
-                "F": "أنثى"
-            }
-        }
+    "modals": {
+      "payment": {
+        "title": "دفع جديد",
+        "method": "طريقة الدفع",
+        "financial_situation": "الوضع المالي",
+        "program_cost": "تكلفة البرنامج",
+        "already_paid": "مدفوع مسبقاً",
+        "remaining": "المتبقي للدفع",
+        "pay_balance": "دفع الرصيد"
+      },
+      "salary": {
+        "title": "راتب جديد",
+        "base_salary": "الراتب الأساسي",
+        "remarks": "ملاحظات"
+      },
+      "expense": {
+        "title": "مصروف جديد"
+      }
     }
+  },
+  "structure": {
+    "faculties": {
+      "title": "الكليات",
+      "subtitle": "إدارة كليات الجامعة",
+      "actions": {
+        "new": "كلية جديدة"
+      },
+      "search_placeholder": "البحث عن كلية...",
+      "table": {
+        "code": "الرمز",
+        "name": "الاسم",
+        "description": "الوصف",
+        "departments": "الأقسام",
+        "actions": "إجراءات"
+      },
+      "modal": {
+        "title_new": "كلية جديدة",
+        "title_edit": "تعديل الكلية",
+        "name": "الاسم",
+        "code": "الرمز",
+        "description": "الوصف",
+        "cancel": "إلغاء",
+        "create": "إنشاء",
+        "update": "تحديث"
+      }
+    },
+    "departments": {
+      "title": "الأقسام",
+      "subtitle": "إدارة الأقسام حسب الكلية",
+      "actions": {
+        "new": "قسم جديد"
+      },
+      "search_placeholder": "البحث عن قسم...",
+      "filters": {
+        "all_faculties": "جميع الكليات",
+        "select_faculty": "اختر كلية"
+      },
+      "table": {
+        "code": "الرمز",
+        "name": "الاسم",
+        "faculty": "الكلية",
+        "stats": "الإحصائيات",
+        "actions": "إجراءات"
+      },
+      "modal": {
+        "title_new": "قسم جديد",
+        "title_edit": "تعديل القسم",
+        "faculty": "الكلية",
+        "name": "الاسم",
+        "code": "الرمز",
+        "description": "الوصف",
+        "cancel": "إلغاء",
+        "create": "إنشاء",
+        "update": "تحديث"
+      }
+    },
+    "programs": {
+      "title": "البرامج (الشعب)",
+      "subtitle": "إدارة البرامج الأكاديمية",
+      "actions": {
+        "new": "برنامج جديد"
+      },
+      "search_placeholder": "البحث عن برنامج...",
+      "filters": {
+        "all_departments": "جميع الأقسام",
+        "select_department": "اختر قسماً"
+      },
+      "table": {
+        "code": "الرمز",
+        "name": "الاسم",
+        "department": "القسم",
+        "level": "المستوى",
+        "students": "الطلاب",
+        "actions": "إجراءات"
+      },
+      "modal": {
+        "title_new": "برنامج جديد",
+        "title_edit": "تعديل البرنامج",
+        "department": "القسم",
+        "levels": "المستويات (اضغط Ctrl/Cmd للاختيار المتعدد)",
+        "name": "اسم البرنامج",
+        "code": "الرمز",
+        "duration": "المدة (بالسنوات)",
+        "tuition": "رسوم الدراسة",
+        "description": "الوصف",
+        "cancel": "إلغاء",
+        "create": "إنشاء",
+        "update": "تحديث"
+      }
+    },
+    "classrooms": {
+      "title": "قاعات الدراسة",
+      "subtitle": "إدارة القاعات وتوفرها",
+      "actions": {
+        "new": "قاعة جديدة"
+      },
+      "search_placeholder": "البحث عن قاعة...",
+      "table": {
+        "room": "القاعة",
+        "name": "الاسم",
+        "code": "الرمز",
+        "building": "المبنى",
+        "capacity": "السعة",
+        "equipment": "التجهيزات",
+        "status": "الحالة",
+        "actions": "إجراءات"
+      },
+      "features": {
+        "projector": "جهاز عرض",
+        "computers": "أجهزة كمبيوتر",
+        "available": "متاح",
+        "occupied": "مشغول"
+      },
+      "modal": {
+        "title_new": "قاعة جديدة",
+        "title_edit": "تعديل القاعة",
+        "code": "رمز القاعة",
+        "name": "الاسم",
+        "building": "المبنى",
+        "capacity": "السعة",
+        "has_projector": "جهاز عرض فيديو",
+        "has_computers": "مجهزة بأجهزة كمبيوتر",
+        "is_available": "قاعة متاحة",
+        "cancel": "إلغاء",
+        "create": "إنشاء",
+        "update": "تحديث"
+      },
+      "availability": {
+        "title": "التوفر",
+        "date": "التاريخ",
+        "time": "الوقت",
+        "check": "تحقق"
+      }
+    },
+    "levels": {
+      "title": "إدارة المستويات",
+      "subtitle": "تكوين المستويات الدراسية (ليسانس، ماستر، دكتوراه)",
+      "actions": {
+        "new": "مستوى جديد"
+      },
+      "empty": "لا توجد مستويات مكونة.",
+      "card": {
+        "order": "الترتيب"
+      },
+      "modal": {
+        "title_new": "مستوى جديد",
+        "title_edit": "تعديل المستوى",
+        "name": "المستوى",
+        "order": "الترتيب",
+        "order_hint": "يستخدم للفرز (مثال: L1=1, L2=2...)",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "saving": "جاري الحفظ..."
+      }
+    },
+    "academic_years": {
+      "title": "السنوات الجامعية",
+      "subtitle": "إدارة التقويم الأكاديمي",
+      "actions": {
+        "new": "سنة جديدة",
+        "manage": "إدارة / تعديل",
+        "set_current": "تعيين كحاليه"
+      },
+      "status": {
+        "current": "الحالية"
+      },
+      "modal": {
+        "title_new": "سنة جامعية جديدة",
+        "title_edit": "إدارة السنة الجامعية",
+        "details_title": "تفاصيل السنة",
+        "name": "الاسم",
+        "name_placeholder": "مثال: 2025-2026",
+        "start_date": "تاريخ البدء",
+        "end_date": "تاريخ الانتهاء",
+        "create": "إنشاء السنة",
+        "update": "حفظ التعديلات",
+        "semesters_title": "الفصول الدراسية",
+        "add_semester": "إضافة فصل دراسي",
+        "no_semesters": "لم يتم تكوين فصول دراسية"
+      },
+      "semesters_table": {
+        "type": "النوع",
+        "dates": "التواريخ",
+        "status": "الحالة"
+      },
+      "semester_modal": {
+        "title": "إضافة فصل دراسي",
+        "type": "النوع",
+        "start_date": "تاريخ البدء",
+        "end_date": "تاريخ الانتهاء",
+        "cancel": "إلغاء",
+        "add": "إضافة"
+      }
+    }
+  },
+  "admin": {
+    "users": {
+      "title": "إدارة المستخدمين",
+      "subtitle": "إدارة حسابات المستخدمين وصلاحياتهم",
+      "actions": {
+        "new": "مستخدم جديد"
+      },
+      "table": {
+        "user": "المستخدم",
+        "role": "الدور",
+        "status": "الحالة",
+        "actions": "إجراءات"
+      },
+      "filters": {
+        "all_roles": "جميع الأدوار"
+      },
+      "modal": {
+        "title_new": "مستخدم جديد",
+        "title_edit": "تعديل المستخدم",
+        "title_password": "تغيير كلمة المرور",
+        "username": "اسم المستخدم",
+        "email": "البريد الإلكتروني",
+        "first_name": "الاسم الأول",
+        "last_name": "اللقب",
+        "role": "الدور",
+        "password": "كلمة المرور",
+        "password_confirm": "تأكيد كلمة المرور",
+        "old_password": "كلمة المرور القديمة",
+        "new_password": "كلمة المرور الجديدة",
+        "new_password_confirm": "تأكيد كلمة المرور الجديدة",
+        "phone": "الهاتف",
+        "address": "العنوان",
+        "gender": "الجنس",
+        "date_of_birth": "تاريخ الميلاد",
+        "is_active": "نشط",
+        "cancel": "إلغاء",
+        "create": "إنشاء المستخدم",
+        "update": "تحديث",
+        "change_password": "تغيير كلمة المرور"
+      },
+      "roles": {
+        "ADMIN": "مدير",
+        "DEAN": "عميد",
+        "TEACHER": "أستاذ",
+        "STUDENT": "طالب",
+        "ACCOUNTANT": "محاسب",
+        "SECRETARY": "سكرتير"
+      },
+      "gender": {
+        "M": "ذكر",
+        "F": "أنثى"
+      }
+    }
+  }
 }
