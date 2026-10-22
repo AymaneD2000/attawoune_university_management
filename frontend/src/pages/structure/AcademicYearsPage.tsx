@@ -4,16 +4,16 @@ import universityService from '../../services/universityService';
 import { AcademicYear, Semester } from '../../types';
 import {
     PlusIcon,
-    PencilIcon,
     TrashIcon,
     CheckCircleIcon,
     XMarkIcon
 } from '@heroicons/react/24/outline';
+import { changedFields } from '../../utils/partialUpdate';
 
 const AcademicYearsPage: React.FC = () => {
     const { t } = useTranslation();
     const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [showSemesterModal, setShowSemesterModal] = useState(false);
     const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
@@ -33,13 +33,13 @@ const AcademicYearsPage: React.FC = () => {
 
     const fetchYears = useCallback(async () => {
         try {
-            setLoading(true);
+            // setLoading(true);
             const data = await universityService.getAcademicYears();
             setAcademicYears(data.results);
         } catch (error) {
             console.error('Error fetching academic years:', error);
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     }, []);
 
@@ -51,7 +51,15 @@ const AcademicYearsPage: React.FC = () => {
         e.preventDefault();
         try {
             if (editingYear) {
-                await universityService.updateAcademicYear(editingYear.id, formData);
+                await universityService.updateAcademicYear(
+                    editingYear.id,
+                    changedFields(formData, {
+                        name: editingYear.name,
+                        start_date: editingYear.start_date,
+                        end_date: editingYear.end_date,
+                        is_current: editingYear.is_current,
+                    }),
+                );
             } else {
                 await universityService.createAcademicYear(formData);
             }

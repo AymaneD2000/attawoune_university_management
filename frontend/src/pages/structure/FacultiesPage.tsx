@@ -9,6 +9,7 @@ import {
     MagnifyingGlassIcon,
     XMarkIcon
 } from '@heroicons/react/24/outline';
+import { changedFields } from '../../utils/partialUpdate';
 
 const FacultiesPage: React.FC = () => {
     const { t } = useTranslation();
@@ -43,7 +44,14 @@ const FacultiesPage: React.FC = () => {
         e.preventDefault();
         try {
             if (editingFaculty) {
-                await universityService.updateFaculty(editingFaculty.id, formData);
+                await universityService.updateFaculty(
+                    editingFaculty.id,
+                    changedFields(formData, {
+                        name: editingFaculty.name,
+                        code: editingFaculty.code,
+                        description: editingFaculty.description || '',
+                    }),
+                );
             } else {
                 await universityService.createFaculty(formData);
             }

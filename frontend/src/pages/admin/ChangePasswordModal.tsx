@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { XMarkIcon, KeyIcon } from '@heroicons/react/24/outline';
 import userService from '../../services/userService';
 import { User } from '../../types';
+import { getFieldError, normalizeApiError, NormalizedApiError } from '../../utils/apiError';
 
 interface ChangePasswordModalProps {
     user: User;
@@ -13,7 +14,7 @@ interface ChangePasswordModalProps {
 const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ user, onClose, onSuccess }) => {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<any>(null);
+    const [error, setError] = useState<NormalizedApiError | null>(null);
 
     const [formData, setFormData] = useState({
         old_password: '',
@@ -36,7 +37,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ user, onClose
             onSuccess();
         } catch (err: any) {
             console.error('Error changing password:', err);
-            setError(err.response?.data || { detail: 'An error occurred' });
+            setError(normalizeApiError(err.response?.data));
         } finally {
             setLoading(false);
         }
@@ -62,9 +63,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ user, onClose
                         {t('admin.users.modal.change_password')} : <span className="font-bold">{user.full_name}</span>
                     </div>
 
-                    {error && error.detail && (
+                    {error && (
                         <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-100">
-                            {error.detail}
+                            {error.message}
                         </div>
                     )}
 
@@ -77,9 +78,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ user, onClose
                                 required
                                 value={formData.old_password}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${error?.old_password ? 'border-red-500' : 'border-gray-300'}`}
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${getFieldError(error, 'old_password') ? 'border-red-500' : 'border-gray-300'}`}
                             />
-                            {error?.old_password && <p className="mt-1 text-xs text-red-500">{error.old_password}</p>}
+                            {getFieldError(error, 'old_password') && <p className="mt-1 text-xs text-red-500">{getFieldError(error, 'old_password')}</p>}
                         </div>
 
                         <div>
@@ -90,9 +91,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ user, onClose
                                 required
                                 value={formData.new_password}
                                 onChange={handleChange}
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${error?.new_password ? 'border-red-500' : 'border-gray-300'}`}
+                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all ${getFieldError(error, 'new_password') ? 'border-red-500' : 'border-gray-300'}`}
                             />
-                            {error?.new_password && <p className="mt-1 text-xs text-red-500">{error.new_password}</p>}
+                            {getFieldError(error, 'new_password') && <p className="mt-1 text-xs text-red-500">{getFieldError(error, 'new_password')}</p>}
                         </div>
 
                         <div>

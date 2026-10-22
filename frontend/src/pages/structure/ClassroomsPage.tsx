@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import universityService from '../../services/universityService';
-import { Classroom, PaginatedResponse } from '../../types';
+import { Classroom } from '../../types';
 import {
     PlusIcon,
     PencilIcon,
@@ -12,6 +12,7 @@ import {
     XCircleIcon,
     ClockIcon
 } from '@heroicons/react/24/outline';
+import { changedFields } from '../../utils/partialUpdate';
 
 const ClassroomsPage: React.FC = () => {
     const { t } = useTranslation();
@@ -54,7 +55,18 @@ const ClassroomsPage: React.FC = () => {
         e.preventDefault();
         try {
             if (editingClassroom) {
-                await universityService.updateClassroom(editingClassroom.id, formData as any);
+                await universityService.updateClassroom(
+                    editingClassroom.id,
+                    changedFields(formData, {
+                        name: editingClassroom.name,
+                        code: editingClassroom.code,
+                        building: editingClassroom.building,
+                        capacity: editingClassroom.capacity,
+                        has_projector: editingClassroom.has_projector,
+                        has_computers: editingClassroom.has_computers || false,
+                        is_available: editingClassroom.is_available,
+                    }) as any,
+                );
             } else {
                 await universityService.createClassroom(formData as any);
             }

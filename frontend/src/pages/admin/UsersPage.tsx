@@ -1,253 +1,339 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    PlusIcon,
-    MagnifyingGlassIcon,
-    PencilIcon,
-    TrashIcon,
-    KeyIcon,
-    UserCircleIcon,
-    FunnelIcon,
-    XMarkIcon
+  CalendarDaysIcon,
+  CheckCircleIcon,
+  EnvelopeIcon,
+  FunnelIcon,
+  KeyIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  TrashIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
+import {
+  EmptyState,
+  EntityAvatar,
+  IconActionButton,
+  ListLoading,
+  PaginationBar,
+  StatusPill,
+} from '../../components/common/EntityDisplay';
+import PageHeader from '../../components/common/PageHeader';
 import userService from '../../services/userService';
 import { User } from '../../types';
-import UserFormModal from './UserFormModal';
 import ChangePasswordModal from './ChangePasswordModal';
+import UserFormModal from './UserFormModal';
+
+const PAGE_SIZE = 20;
 
 const UsersPage: React.FC = () => {
-    const { t } = useTranslation();
-    const [users, setUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [roleFilter, setRoleFilter] = useState('');
-    const [showUserModal, setShowUserModal] = useState(false);
-    const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { user: currentUser } = useAuth();
+  const isAdmin = currentUser?.role === 'ADMIN';
+  const isDean = currentUser?.role === 'DEAN';
+  const canSeeFilters = isAdmin || isDean;
+  const { t, i18n } = useTranslation();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    const fetchUsers = useCallback(async () => {
-        setLoading(true);
-        try {
-            const data = await userService.getUsers({
-                search: searchQuery,
-                role: roleFilter || undefined
-            });
-            setUsers(data.results);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [searchQuery, roleFilter]);
+  const roles = ['ADMIN', 'DEAN', 'TEACHER', 'STUDENT', 'ACCOUNTANT', 'SECRETARY'];
 
-    useEffect(() => {
-        fetchUsers();
-    }, [fetchUsers]);
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await userService.getUsers({
+        search: searchQuery,
+        role: roleFilter || undefined,
+        page: currentPage,
+      });
+      setUsers(data.results || []);
+      setTotalUsers(data.count || 0);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, roleFilter, currentPage]);
 
-    const handleEdit = (user: User) => {
-        setSelectedUser(user);
-        setShowUserModal(true);
-    };
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
-    const handleChangePassword = (user: User) => {
-        setSelectedUser(user);
-        setShowPasswordModal(true);
-    };
+  const getUserName = (user: User) =>
+    user.full_name
+      || [user.first_name, user.last_name].filter(Boolean).join(' ').trim()
+      || user.username;
 
-    const handleDelete = async (user: User) => {
-        if (window.confirm(t('common.confirm.delete', `Voulez-vous vraiment supprimer l'utilisateur ${user.full_name} ?`))) {
-            try {
-                await userService.deleteUser(user.id);
-                fetchUsers();
-            } catch (error) {
-                console.error('Error deleting user:', error);
-            }
-        }
-    };
+  const getRoleTone = (role: User['role']): 'blue' | 'green' | 'orange' | 'earth' | 'slate' => ({
+    ADMIN: 'blue',
+    DEAN: 'earth',
+    TEACHER: 'green',
+    STUDENT: 'blue',
+    ACCOUNTANT: 'orange',
+    SECRETARY: 'slate',
+  }[role] as 'blue' | 'green' | 'orange' | 'earth' | 'slate');
 
-    const roles = ['ADMIN', 'DEAN', 'TEACHER', 'STUDENT', 'ACCOUNTANT', 'SECRETARY'];
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setShowUserModal(true);
+  };
 
-    return (
-        <div className="p-6 max-w-7xl mx-auto space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                        {t('admin.users.title')}
-                    </h1>
-                    <p className="text-gray-500 mt-1 font-medium">
-                        {t('admin.users.subtitle')}
-                    </p>
-                </div>
-                <button
-                    onClick={() => {
-                        setSelectedUser(null);
-                        setShowUserModal(true);
-                    }}
-                    className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                    <PlusIcon className="h-5 w-5 mr-2 rtl:ml-2 rtl:mr-0 stroke-2" />
-                    <span className="font-bold">{t('admin.users.actions.new')}</span>
-                </button>
+  const handleChangePassword = (user: User) => {
+    setSelectedUser(user);
+    setShowPasswordModal(true);
+  };
+
+  const handleDelete = async (user: User) => {
+    if (!window.confirm(t('common.confirm.delete', `Voulez-vous vraiment supprimer l'utilisateur ${getUserName(user)} ?`))) return;
+
+    try {
+      await userService.deleteUser(user.id);
+      await fetchUsers();
+      setSuccessMessage(t('admin.users.messages.delete_success', 'Utilisateur supprimé avec succès'));
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
+  };
+
+  const userActions = (user: User) => (
+    <div className="flex items-center gap-1">
+      <IconActionButton label={t('admin.users.modal.title_edit', 'Modifier')} tone="blue" onClick={() => handleEdit(user)}>
+        <PencilSquareIcon className="h-5 w-5" />
+      </IconActionButton>
+      <IconActionButton label={t('admin.users.modal.title_password', 'Mot de passe')} tone="orange" onClick={() => handleChangePassword(user)}>
+        <KeyIcon className="h-5 w-5" />
+      </IconActionButton>
+      {isAdmin && user.id !== currentUser?.id && (
+        <IconActionButton label={t('common.delete', 'Supprimer')} tone="red" onClick={() => handleDelete(user)}>
+          <TrashIcon className="h-5 w-5" />
+        </IconActionButton>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-6">
+      <PageHeader
+        eyebrow={t('sidebar.administration', 'Administration')}
+        title={t('admin.users.title', 'Gestion des utilisateurs')}
+        description={t('admin.users.subtitle', 'Gérer les comptes, rôles et accès à la plateforme.')}
+        icon={<UsersIcon className="h-6 w-6" />}
+        actions={isAdmin && (
+          <button
+            onClick={() => {
+              setSelectedUser(null);
+              setShowUserModal(true);
+            }}
+            className="brand-button"
+          >
+            <PlusIcon className="h-5 w-5" />
+            {t('admin.users.actions.new', 'Nouvel utilisateur')}
+          </button>
+        )}
+      />
+
+      {canSeeFilters && (
+        <div className="surface-panel p-4">
+          <div className="flex flex-col gap-3 md:flex-row">
+            <div className="relative min-w-0 flex-1">
+              <MagnifyingGlassIcon className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                placeholder={t('common.search', 'Rechercher...')}
+                value={searchQuery}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setCurrentPage(1);
+                }}
+                className="brand-input ps-12"
+              />
             </div>
-
-            <div className="bg-white rounded-2xl shadow-xl shadow-gray-100 border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-gray-50 bg-opacity-30">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="relative flex-grow group">
-                            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2 rtl:left-auto rtl:right-4 group-focus-within:text-indigo-500 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder={t('common.search')}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all rtl:pl-4 rtl:pr-12 bg-white"
-                            />
-                        </div>
-                        <div className="w-full md:w-64 relative">
-                            <FunnelIcon className="h-4 w-4 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2 rtl:left-auto rtl:right-4" />
-                            <select
-                                value={roleFilter}
-                                onChange={(e) => setRoleFilter(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all rtl:pl-4 rtl:pr-10 appearance-none bg-white font-medium"
-                            >
-                                <option value="">{t('admin.users.filters.all_roles')}</option>
-                                {roles.map(role => (
-                                    <option key={role} value={role}>{t(`admin.users.roles.${role}`)}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {loading ? (
-                    <div className="p-20 text-center flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent shadow-sm"></div>
-                        <p className="mt-4 text-gray-500 font-medium animate-pulse">{t('common.loading')}</p>
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="bg-gray-50 bg-opacity-50">
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest rtl:text-right">
-                                        {t('admin.users.table.user')}
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest rtl:text-right">
-                                        {t('admin.users.table.role')}
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest rtl:text-right">
-                                        {t('admin.users.table.status')}
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-widest rtl:text-left">
-                                        {t('admin.users.table.actions')}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {users.map((user) => (
-                                    <tr key={user.id} className="hover:bg-indigo-50 hover:bg-opacity-30 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="h-12 w-12 flex-shrink-0">
-                                                    {user.profile_picture ? (
-                                                        <img src={user.profile_picture} alt="" className="h-12 w-12 rounded-full object-cover ring-2 ring-gray-100" />
-                                                    ) : (
-                                                        <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                                            <UserCircleIcon className="h-8 w-8" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="ml-4 rtl:ml-0 rtl:mr-4">
-                                                    <div className="text-sm font-bold text-gray-900">{user.full_name}</div>
-                                                    <div className="text-xs text-gray-500 font-medium">{user.username} • {user.email}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold leading-5 ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                                                    user.role === 'TEACHER' ? 'bg-blue-100 text-blue-800' :
-                                                        user.role === 'STUDENT' ? 'bg-green-100 text-green-800' :
-                                                            'bg-gray-100 text-gray-800'
-                                                }`}>
-                                                {t(`admin.users.roles.${user.role}`)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                                            {user.is_active ? (
-                                                <span className="flex items-center text-green-600">
-                                                    <span className="h-2 w-2 rounded-full bg-green-500 mr-2 rtl:ml-2 rtl:mr-0 animate-pulse"></span>
-                                                    {t('common.active')}
-                                                </span>
-                                            ) : (
-                                                <span className="flex items-center text-gray-400">
-                                                    <span className="h-2 w-2 rounded-full bg-gray-300 mr-2 rtl:ml-2 rtl:mr-0"></span>
-                                                    {t('common.inactive', 'Inactif')}
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end space-x-2 rtl:space-x-reverse">
-                                                <button
-                                                    onClick={() => handleEdit(user)}
-                                                    className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
-                                                    title={t('admin.users.modal.title_edit')}
-                                                >
-                                                    <PencilIcon className="h-5 w-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleChangePassword(user)}
-                                                    className="p-2 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors"
-                                                    title={t('admin.users.modal.title_password')}
-                                                >
-                                                    <KeyIcon className="h-5 w-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(user)}
-                                                    className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                                                    title={t('common.delete', 'Supprimer')}
-                                                >
-                                                    <TrashIcon className="h-5 w-5" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {users.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500 font-medium italic">
-                                            {t('admin.users.empty', 'Aucun utilisateur trouvé')}
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+            <div className="relative w-full md:w-72">
+              <FunnelIcon className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <select
+                value={roleFilter}
+                onChange={(event) => {
+                  setRoleFilter(event.target.value);
+                  setCurrentPage(1);
+                }}
+                className="brand-input ps-11"
+              >
+                <option value="">{t('admin.users.filters.all_roles', 'Tous les rôles')}</option>
+                {roles.map((role) => (
+                  <option key={role} value={role}>{t(`admin.users.roles.${role}`, role)}</option>
+                ))}
+              </select>
             </div>
-
-            {showUserModal && (
-                <UserFormModal
-                    user={selectedUser}
-                    onClose={() => setShowUserModal(false)}
-                    onSuccess={() => {
-                        setShowUserModal(false);
-                        fetchUsers();
-                    }}
-                />
-            )}
-
-            {showPasswordModal && selectedUser && (
-                <ChangePasswordModal
-                    user={selectedUser}
-                    onClose={() => setShowPasswordModal(false)}
-                    onSuccess={() => {
-                        setShowPasswordModal(false);
-                        alert(t('admin.users.modal.password_success', 'Mot de passe modifié avec succès'));
-                    }}
-                />
-            )}
+          </div>
         </div>
-    );
+      )}
+
+      <section className="surface-panel overflow-hidden">
+        {loading ? (
+          <ListLoading />
+        ) : users.length === 0 ? (
+          <EmptyState
+            title={t('admin.users.empty', 'Aucun utilisateur trouvé')}
+            description={t('admin.users.empty_description', 'Modifiez les filtres ou créez un nouveau compte utilisateur.')}
+            action={isAdmin && (
+              <button type="button" onClick={() => setShowUserModal(true)} className="brand-button">
+                <PlusIcon className="h-5 w-5" />
+                {t('admin.users.actions.new', 'Nouvel utilisateur')}
+              </button>
+            )}
+          />
+        ) : (
+          <>
+            <div className="divide-y divide-slate-100 md:hidden">
+              {users.map((user) => {
+                const name = getUserName(user);
+                return (
+                  <article key={user.id} className="p-4">
+                    <div className="flex items-start gap-3">
+                      <EntityAvatar name={name} src={user.profile_picture} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h3 className="truncate font-black text-slate-950">{name}</h3>
+                            <p className="mt-0.5 truncate text-xs font-bold text-blue-700">@{user.username}</p>
+                          </div>
+                          <StatusPill tone={user.is_active ? 'green' : 'slate'} dot>
+                            {user.is_active ? t('common.active', 'Actif') : t('common.inactive', 'Inactif')}
+                          </StatusPill>
+                        </div>
+                        <div className="mt-3 rounded-xl bg-slate-50 p-3">
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <EnvelopeIcon className="h-4 w-4 shrink-0 text-blue-600" />
+                            <span className="truncate font-semibold">{user.email || t('common.not_provided', 'Non renseigné')}</span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between">
+                            <StatusPill tone={getRoleTone(user.role)}>{t(`admin.users.roles.${user.role}`, user.role)}</StatusPill>
+                            <span className="text-xs font-semibold text-slate-400">
+                              {user.created_at ? new Date(user.created_at).toLocaleDateString(i18n.language) : '—'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex justify-end">{userActions(user)}</div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table>
+                <thead>
+                  <tr>
+                    <th className="px-5 py-4 text-start text-xs font-black uppercase tracking-wider text-slate-500">{t('admin.users.table.user', 'Utilisateur')}</th>
+                    <th className="px-5 py-4 text-start text-xs font-black uppercase tracking-wider text-slate-500">{t('admin.users.table.contact', 'Contact')}</th>
+                    <th className="px-5 py-4 text-start text-xs font-black uppercase tracking-wider text-slate-500">{t('admin.users.table.role', 'Rôle')}</th>
+                    <th className="px-5 py-4 text-start text-xs font-black uppercase tracking-wider text-slate-500">{t('admin.users.table.status', 'Statut')}</th>
+                    <th className="px-5 py-4 text-start text-xs font-black uppercase tracking-wider text-slate-500">{t('admin.users.table.created', 'Créé le')}</th>
+                    <th className="px-5 py-4 text-end text-xs font-black uppercase tracking-wider text-slate-500">{t('admin.users.table.actions', 'Actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {users.map((user) => {
+                    const name = getUserName(user);
+                    return (
+                      <tr key={user.id}>
+                        <td className="px-5 py-4">
+                          <div className="flex min-w-[220px] items-center gap-3">
+                            <EntityAvatar name={name} src={user.profile_picture} />
+                            <div className="min-w-0">
+                              <p className="truncate font-black text-slate-950">{name}</p>
+                              <p className="mt-0.5 truncate text-xs font-bold text-blue-700">@{user.username}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <p className="max-w-[230px] truncate text-sm font-semibold text-slate-700">{user.email || '—'}</p>
+                          <p className="mt-1 text-xs text-slate-400">{user.phone || t('common.not_provided', 'Téléphone non renseigné')}</p>
+                        </td>
+                        <td className="px-5 py-4"><StatusPill tone={getRoleTone(user.role)}>{t(`admin.users.roles.${user.role}`, user.role)}</StatusPill></td>
+                        <td className="px-5 py-4">
+                          <StatusPill tone={user.is_active ? 'green' : 'slate'} dot>
+                            {user.is_active ? t('common.active', 'Actif') : t('common.inactive', 'Inactif')}
+                          </StatusPill>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                            <CalendarDaysIcon className="h-4 w-4 text-orange-600" />
+                            {user.created_at ? new Date(user.created_at).toLocaleDateString(i18n.language) : '—'}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4"><div className="flex justify-end">{userActions(user)}</div></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <PaginationBar
+              currentPage={currentPage}
+              currentCount={users.length}
+              total={totalUsers}
+              pageSize={PAGE_SIZE}
+              onPrevious={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              onNext={() => setCurrentPage((page) => page + 1)}
+            />
+          </>
+        )}
+      </section>
+
+      {showUserModal && (
+        <UserFormModal
+          user={selectedUser}
+          onClose={() => setShowUserModal(false)}
+          onSuccess={() => {
+            setShowUserModal(false);
+            fetchUsers();
+            setSuccessMessage(
+              selectedUser
+                ? t('admin.users.messages.update_success', 'Utilisateur mis à jour avec succès')
+                : t('admin.users.messages.create_success', 'Utilisateur créé avec succès'),
+            );
+            setTimeout(() => setSuccessMessage(null), 3000);
+          }}
+        />
+      )}
+
+      {showPasswordModal && selectedUser && (
+        <ChangePasswordModal
+          user={selectedUser}
+          onClose={() => setShowPasswordModal(false)}
+          onSuccess={() => {
+            setShowPasswordModal(false);
+            setSuccessMessage(t('admin.users.modal.password_success', 'Mot de passe modifié avec succès'));
+            setTimeout(() => setSuccessMessage(null), 3000);
+          }}
+        />
+      )}
+
+      {successMessage && (
+        <div className="fixed bottom-5 end-5 z-50 animate-fade-up">
+          <div className="flex items-center gap-3 rounded-2xl border border-green-200 bg-white px-4 py-3 text-green-800 shadow-floating">
+            <CheckCircleIcon className="h-6 w-6 text-green-500" />
+            <span className="text-sm font-bold">{successMessage}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default UsersPage;

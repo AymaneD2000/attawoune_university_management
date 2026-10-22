@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import universityService from '../../services/universityService';
 import { Level } from '../../types';
+import { changedFields } from '../../utils/partialUpdate';
 
 interface LevelFormModalProps {
     level?: Level;
@@ -36,7 +37,10 @@ const LevelFormModal: React.FC<LevelFormModalProps> = ({ level, onClose, onSucce
 
         try {
             if (level) {
-                await universityService.updateLevel(level.id, formData);
+                await universityService.updateLevel(
+                    level.id,
+                    changedFields(formData, { name: level.name, order: level.order }),
+                );
             } else {
                 await universityService.createLevel(formData);
             }

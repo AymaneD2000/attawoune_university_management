@@ -10,6 +10,7 @@ import {
     XMarkIcon,
     FunnelIcon
 } from '@heroicons/react/24/outline';
+import { changedFields } from '../../utils/partialUpdate';
 
 const DepartmentsPage: React.FC = () => {
     const { t } = useTranslation();
@@ -59,7 +60,15 @@ const DepartmentsPage: React.FC = () => {
             };
 
             if (editingDepartment) {
-                await universityService.updateDepartment(editingDepartment.id, data);
+                await universityService.updateDepartment(
+                    editingDepartment.id,
+                    changedFields(data, {
+                        name: editingDepartment.name,
+                        code: editingDepartment.code,
+                        description: editingDepartment.description || '',
+                        faculty: editingDepartment.faculty,
+                    }),
+                );
             } else {
                 await universityService.createDepartment(data);
             }

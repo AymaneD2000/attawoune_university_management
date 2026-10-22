@@ -10,6 +10,7 @@ import {
     XMarkIcon,
     FunnelIcon
 } from '@heroicons/react/24/outline';
+import { changedFields } from '../../utils/partialUpdate';
 
 const ProgramsPage: React.FC = () => {
     const { t } = useTranslation();
@@ -29,6 +30,7 @@ const ProgramsPage: React.FC = () => {
         duration_years: number;
         description: string;
         tuition_fee: string;
+        fees_config: Record<number, string>;
     }>({
         name: '',
         code: '',
@@ -37,6 +39,7 @@ const ProgramsPage: React.FC = () => {
         duration_years: 3,
         description: '',
         tuition_fee: '',
+        fees_config: {},
     });
 
     const fetchData = useCallback(async () => {
@@ -72,11 +75,30 @@ const ProgramsPage: React.FC = () => {
                 department: parseInt(formData.department),
                 levels: formData.levels.map(l => parseInt(l)),
                 duration_years: Number(formData.duration_years),
-                tuition_fee: formData.tuition_fee
+                tuition_fee: formData.tuition_fee,
+                fees_config: formData.fees_config
             };
 
             if (editingProgram) {
-                await universityService.updateProgram(editingProgram.id, data as any);
+                const initialFees = editingProgram.fees
+                    ? editingProgram.fees.reduce(
+                        (fees, fee) => ({ ...fees, [fee.level]: fee.amount }),
+                        {} as Record<number, string>,
+                    )
+                    : {};
+                await universityService.updateProgram(
+                    editingProgram.id,
+                    changedFields(data, {
+                        name: editingProgram.name,
+                        code: editingProgram.code,
+                        department: editingProgram.department,
+                        levels: editingProgram.levels || [],
+                        duration_years: editingProgram.duration_years,
+                        description: editingProgram.description || '',
+                        tuition_fee: editingProgram.tuition_fee,
+                        fees_config: initialFees,
+                    }) as any,
+                );
             } else {
                 await universityService.createProgram(data as any);
             }
@@ -109,6 +131,7 @@ const ProgramsPage: React.FC = () => {
             duration_years: program.duration_years,
             description: program.description,
             tuition_fee: program.tuition_fee,
+            fees_config: program.fees ? program.fees.reduce((acc, fee) => ({ ...acc, [fee.level]: fee.amount }), {}) : {},
         });
         setShowModal(true);
     };
@@ -123,6 +146,7 @@ const ProgramsPage: React.FC = () => {
             duration_years: 3,
             description: '',
             tuition_fee: '',
+            fees_config: {},
         });
     };
 
@@ -336,13 +360,87 @@ const ProgramsPage: React.FC = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">{t('structure.programs.modal.tuition', 'Frais de scolarité')}</label>
                                     <input
-                                        type="text" // Kept as text as per original state type
+                                        type="number"
                                         required
+                                        readOnly={Object.values(formData.fees_config).some(v => v && parseFloat(v) > 0)}
                                         value={formData.tuition_fee}
                                         onChange={(e) => setFormData({ ...formData, tuition_fee: e.target.value })}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${Object.values(formData.fees_config).some(v => v && parseFloat(v) > 0) ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                     />
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        {Object.values(formData.fees_config).some(v => v && parseFloat(v) > 0)
+                                            ? t('structure.programs.modal.tuition_auto_hint', 'Calculé automatiquement à partir des frais par niveau.')
+                                            : t('structure.programs.modal.tuition_hint', 'Sera utilisé par défaut si aucun tarif spécifique n\'est défini pour un niveau.')}
+                                    </p>
                                 </div>
+                                {formData.levels.length > 0 && (
+                                    <>
+                                    <div className="col-span-2 border-t pt-4 mt-2">
+                                        <h3 className="text-sm font-medium text-gray-900 mb-2">{t('structure.programs.modal.fees_per_level', 'Frais par niveau (Optionnel)')}</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {formData.levels.map(levelId => {
+                                                const level = levels.find(l => l.id.toString() === levelId.toString());
+                                                if (!level) return null;
+                                                return (
+                                                    <div key={level.id}>
+                                                        <label className="block text-xs font-medium text-gray-500">{level.display_name}</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder={formData.tuition_fee || "0"}
+                                                            value={formData.fees_config[level.id] || ''}
+                                                            onChange={(e) => {
+                                                                const newFeesConfig = {
+                                                                    ...formData.fees_config,
+                                                                    [level.id]: e.target.value
+                                                                };
+                                                                // Auto-calculate tuition_fee as sum of per-level fees
+                                                                const hasAnyFee = Object.values(newFeesConfig).some(v => v && parseFloat(v as string) > 0);
+                                                                let newTuitionFee = formData.tuition_fee;
+                                                                if (hasAnyFee) {
+                                                                    let total = 0;
+                                                                    formData.levels.forEach(lid => {
+                                                                        const feeStr = newFeesConfig[lid as any];
+                                                                        const fee = feeStr ? parseFloat(feeStr as string) : 0;
+                                                                        if (fee > 0) total += fee;
+                                                                    });
+                                                                    newTuitionFee = total.toString();
+                                                                }
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    fees_config: newFeesConfig,
+                                                                    tuition_fee: newTuitionFee
+                                                                });
+                                                            }}
+                                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    <div className="col-span-2 mt-4 bg-gray-50 p-3 rounded-md border border-gray-200">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm font-medium text-gray-700">{t('structure.programs.modal.total_estimated', 'Coût total estimé du programme (Somme des niveaux) :')}</span>
+                                            <span className="text-lg font-bold text-indigo-600">
+                                                {(() => {
+                                                    const defaultFee = parseFloat(formData.tuition_fee) || 0;
+                                                    if (formData.levels.length === 0) return new Intl.NumberFormat('fr-FR').format(defaultFee * (formData.duration_years || 0)) + ' FCFA';
+
+                                                    let total = 0;
+                                                    formData.levels.forEach(levelId => {
+                                                        // Handle both string and number keys if necessary, though state defines record<number, string>
+                                                        // Safely parsing the specific fee
+                                                        const specificFeeStr = formData.fees_config[levelId as any];
+                                                        const specificFee = specificFeeStr ? parseFloat(specificFeeStr) : 0;
+                                                        total += (specificFee > 0 ? specificFee : defaultFee);
+                                                    });
+                                                    return new Intl.NumberFormat('fr-FR').format(total) + ' FCFA';
+                                                })()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    </>
+                                )}
                                 <div className="col-span-2">
                                     <label className="block text-sm font-medium text-gray-700">{t('structure.programs.modal.description', 'Description')}</label>
                                     <textarea
