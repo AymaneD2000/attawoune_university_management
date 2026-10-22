@@ -5,12 +5,16 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  first_name_ar?: string;
+  last_name_ar?: string;
   full_name: string;
   role: 'ADMIN' | 'DEAN' | 'TEACHER' | 'STUDENT' | 'ACCOUNTANT' | 'SECRETARY';
   phone: string;
   address: string;
+  address_ar?: string;
   profile_picture: string | null;
   date_of_birth: string | null;
+  gender?: 'M' | 'F';
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -100,6 +104,16 @@ export interface Program {
   tuition_fee: string;
   is_active: boolean;
   students_count: number;
+  fees?: ProgramFee[];
+}
+
+export interface ProgramFee {
+  id: number;
+  level: number;
+  level_name: string;
+  academic_year: number;
+  academic_year_name: string;
+  amount: string;
 }
 
 export interface Classroom {
@@ -119,7 +133,11 @@ export interface Student {
   id: number;
   user: number;
   user_full_name: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth?: string | null;
   user_email: string;
+  user_phone?: string;
   student_id: string;
   program: number;
   program_name: string;
@@ -133,15 +151,123 @@ export interface Student {
   photo: string | null;
 }
 
+export interface StudentListParams {
+  page: number;
+  search: string;
+  program: number | null;
+  current_level: number | null;
+  status: '' | Student['status'];
+  current_year_only: boolean;
+  ordering: '' | 'student_id' | '-student_id' | 'enrollment_date' | '-enrollment_date' | 'created_at' | '-created_at';
+}
+
+export interface StudentSummary {
+  total: number;
+  active: number;
+  graduated: number;
+  suspended: number;
+}
+
+export interface StudentEnrollmentSummary {
+  id: number;
+  academic_year: number;
+  academic_year_name: string;
+  program: number;
+  program_name: string;
+  level: number;
+  level_display: string;
+  status: string;
+  student?: number;
+  student_name?: string;
+  student_matricule?: string;
+  status_display?: string;
+  enrollment_date?: string;
+  is_active?: boolean;
+}
+
+export interface StudentGradesResponse {
+  exam_grades: CountedResponse<Grade>;
+  course_grades: CountedResponse<CourseGrade>;
+}
+
+export interface StudentAttendanceStatistics {
+  student_id: number;
+  student_name: string;
+  statistics: {
+    total_sessions: number;
+    present: number;
+    absent: number;
+    late: number;
+    excused: number;
+    attendance_rate: number;
+  };
+}
+
+export interface StudentReportCard {
+  id: number;
+  academic_year_name?: string;
+  academic_year?: string;
+  student?: number;
+  student_name?: string;
+  student_matricule?: string;
+  program_name?: string;
+  semester?: number;
+  semester_name?: string;
+  gpa?: string;
+  total_credits?: number;
+  credits_earned?: number;
+  rank?: number;
+  is_published?: boolean;
+  published_at?: string | null;
+  generated_by?: number | null;
+  generated_by_name?: string;
+  generated_at?: string;
+}
+
+export interface StudentFinancialTransaction {
+  id?: number;
+  date?: string;
+  payment_date?: string;
+  description?: string;
+  amount?: string;
+  type?: string;
+  payment_method?: string;
+  reference?: string;
+  status?: string;
+}
+
+export interface StudentFinancialStatement {
+  total_due: string;
+  total_paid: string;
+  balance: string;
+  transactions: StudentFinancialTransaction[];
+  student_name?: string;
+  program?: string;
+  academic_year?: string;
+  status?: string;
+}
+
+export type StudentProfileTab = 'info' | 'enrollments' | 'grades' | 'attendance' | 'bulletins' | 'finance' | 'idcard';
+
 // Teacher types
 export interface Teacher {
   id: number;
   user: number;
-  user_full_name: string;
-  user_email: string;
+  user_name?: string;
+  user_full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  user_email?: string;
+  user_phone?: string;
+  user_address?: string;
+  user_date_of_birth?: string | null;
+  user_gender?: 'M' | 'F';
+  user_profile_picture?: string | null;
   employee_id: string;
-  department: number;
-  department_name: string;
+  department: number | null;
+  department_name?: string;
+  department_code?: string;
+  faculty_name?: string;
   rank: string;
   rank_display: string;
   contract_type: string;
@@ -150,6 +276,8 @@ export interface Teacher {
   specialization: string;
   office_location: string;
   is_active: boolean;
+  courses_count?: number;
+  active_contracts_count?: number;
 }
 
 // Course types
@@ -210,6 +338,11 @@ export interface TuitionPayment {
   student_name: string;
   student_matricule: string;
   academic_year: number;
+  academic_year_name: string;
+  level: number | null;
+  level_name: string;
+  semester: number | null;
+  semester_name: string;
   amount: string;
   payment_method: string;
   payment_method_display: string;
@@ -217,6 +350,48 @@ export interface TuitionPayment {
   status_display: string;
   reference: string;
   payment_date: string;
+}
+
+export interface DebtPayment {
+  id: number;
+  amount: string;
+  payment_date: string;
+  payment_method: string;
+  payment_method_display?: string;
+  reference: string;
+  notes?: string;
+  received_by?: number | null;
+  received_by_name?: string | null;
+  created_at?: string;
+}
+
+export interface StudentDebt {
+  id: number;
+  student: number;
+  student_name: string;
+  student_matricule: string;
+  academic_year: number | null;
+  academic_year_name: string | null;
+  amount_due: string;
+  amount_paid: string;
+  outstanding: string;
+  status: 'OPEN' | 'PARTIAL' | 'PAID';
+  status_display: string;
+  description: string;
+  recorded_by?: number | null;
+  created_at: string;
+  payments?: DebtPayment[];
+}
+
+// A previous-year student eligible for re-inscription into the active year
+export interface ReinscriptionCandidate {
+  id: number;
+  student_id: string;
+  name: string;
+  email?: string;
+  program: string;
+  last_year: string | null;
+  last_level: string | null;
 }
 
 // Deliberation types
@@ -261,6 +436,11 @@ export interface Schedule {
 }
 
 // API Response types
+export interface CountedResponse<T> {
+  count: number;
+  results: T[];
+}
+
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
