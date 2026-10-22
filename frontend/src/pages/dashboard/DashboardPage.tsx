@@ -55,39 +55,56 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon: React.ReactNode;
-  gradient: string;
+  tone: 'blue' | 'green' | 'orange' | 'earth';
   subtitle?: string;
   loading?: boolean;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, gradient, subtitle, loading }) => (
-  <div className={`relative overflow-hidden rounded-2xl shadow-lg p-6 ${gradient} text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl`}>
-    <div className="absolute top-0 right-0 -mt-4 -mr-4 opacity-20">
-      <div className="w-24 h-24 rounded-full bg-white/20"></div>
-    </div>
-    <div className="absolute bottom-0 left-0 -mb-6 -ml-6 opacity-10">
-      <div className="w-32 h-32 rounded-full bg-white/20"></div>
-    </div>
-    <div className="relative z-10">
-      <div className="flex items-center justify-between mb-3">
-        <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, tone, subtitle, loading }) => {
+  const tones = {
+    blue: {
+      line: 'bg-blue-600',
+      icon: 'bg-blue-50 text-blue-700',
+      badge: 'bg-blue-50 text-blue-700',
+    },
+    green: {
+      line: 'bg-green-500',
+      icon: 'bg-green-50 text-green-700',
+      badge: 'bg-green-50 text-green-700',
+    },
+    orange: {
+      line: 'bg-orange-500',
+      icon: 'bg-orange-50 text-orange-700',
+      badge: 'bg-orange-50 text-orange-700',
+    },
+    earth: {
+      line: 'bg-brand-earth',
+      icon: 'bg-orange-50 text-brand-earth',
+      badge: 'bg-orange-50 text-brand-earth',
+    },
+  };
+  const style = tones[tone];
+
+  return (
+    <div className="surface-panel group relative overflow-hidden p-5 transition duration-200 hover:-translate-y-1 hover:shadow-soft sm:p-6">
+      <div className={`absolute inset-y-0 start-0 w-1.5 ${style.line}`} />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-500">{title}</p>
+          {loading ? (
+            <div className="mt-3 h-8 w-24 animate-pulse rounded-lg bg-slate-100" />
+          ) : (
+            <p className="mt-2 truncate text-3xl font-black tracking-tight text-slate-950">{value}</p>
+          )}
+          {subtitle && <span className={`brand-badge mt-3 ${style.badge}`}>{subtitle}</span>}
+        </div>
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition group-hover:scale-105 ${style.icon}`}>
           {icon}
         </div>
-        {subtitle && (
-          <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">
-            {subtitle}
-          </span>
-        )}
       </div>
-      <p className="text-white/80 text-sm font-medium mb-1">{title}</p>
-      {loading ? (
-        <div className="h-8 w-24 bg-white/20 rounded animate-pulse"></div>
-      ) : (
-        <p className="text-2xl font-bold tracking-tight">{value}</p>
-      )}
     </div>
-  </div>
-);
+  );
+};
 
 interface RecentItemProps {
   avatar: string;
@@ -99,22 +116,22 @@ interface RecentItemProps {
 }
 
 const RecentItem: React.FC<RecentItemProps> = ({ avatar, title, subtitle, rightText, rightSubtext, status = 'info' }) => (
-  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200 group">
-    <div className="flex items-center gap-4">
-      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md group-hover:shadow-lg transition-shadow">
+  <div className="group flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4 transition-colors duration-200 hover:border-blue-100 hover:bg-blue-50/60">
+    <div className="flex min-w-0 items-center gap-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-green-500 font-bold text-white shadow-md shadow-blue-900/10 transition-transform group-hover:scale-105">
         {avatar}
       </div>
-      <div>
-        <p className="font-semibold text-gray-900">{title}</p>
-        <p className="text-sm text-gray-500">{subtitle}</p>
+      <div className="min-w-0">
+        <p className="truncate font-bold text-slate-900">{title}</p>
+        <p className="truncate text-sm text-slate-500">{subtitle}</p>
       </div>
     </div>
-    <div className="text-right">
-      <p className={`font-semibold ${status === 'success' ? 'text-emerald-600' :
+    <div className="shrink-0 text-end">
+      <p className={`font-bold ${status === 'success' ? 'text-green-700' :
         status === 'warning' ? 'text-amber-600' :
-          'text-gray-900'
+          'text-slate-900'
         }`}>{rightText}</p>
-      {rightSubtext && <p className="text-xs text-gray-400">{rightSubtext}</p>}
+      {rightSubtext && <p className="text-xs font-medium text-slate-400">{rightSubtext}</p>}
     </div>
   </div>
 );
@@ -135,7 +152,7 @@ const ScheduleItem: React.FC<ScheduleItemProps> = ({ time, title, location, colo
   };
 
   return (
-    <div className={`p-4 rounded-xl border-l-4 rtl:border-r-4 rtl:border-l-0 ${colorClasses[color]} transition-transform hover:translate-x-1 rtl:hover:-translate-x-1`}>
+    <div className={`rounded-xl border-s-4 p-4 ${colorClasses[color]} transition-transform hover:translate-x-1 rtl:hover:-translate-x-1`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="font-semibold">{title}</p>
@@ -200,7 +217,7 @@ const DashboardPage: React.FC = () => {
           title={t('dashboard.stats.students_enrolled', 'Étudiants inscrits')}
           value={data.students_count || 0}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
-          gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+          tone="blue"
           subtitle={t('students.filters.active', 'Actifs')}
           loading={loading}
         />
@@ -208,14 +225,14 @@ const DashboardPage: React.FC = () => {
           title={t('dashboard.stats.teachers', 'Enseignants')}
           value={data.teachers_count || 0}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
-          gradient="bg-gradient-to-br from-emerald-500 to-emerald-700"
+          tone="green"
           loading={loading}
         />
         <StatCard
           title={t('dashboard.stats.programs', 'Filières / Programmes')}
           value={data.programs_count || 0}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>}
-          gradient="bg-gradient-to-br from-indigo-500 to-indigo-700"
+          tone="blue"
           subtitle={`${data.departments_count || 0} ${t('sidebar.departments', 'départements')}`}
           loading={loading}
         />
@@ -223,14 +240,14 @@ const DashboardPage: React.FC = () => {
           title={t('dashboard.stats.revenue', 'Revenus collectés')}
           value={formatCurrency(data.total_tuition_collected || 0)}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-          gradient="bg-gradient-to-br from-amber-500 to-orange-600"
+          tone="orange"
           subtitle={data.current_year}
           loading={loading}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div className="surface-panel p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">{t('dashboard.sections.recent_inscriptions', 'Inscriptions récentes')}</h3>
           </div>
@@ -248,7 +265,7 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div className="surface-panel p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">{t('dashboard.sections.recent_payments', 'Paiements récents')}</h3>
           </div>
@@ -277,27 +294,27 @@ const DashboardPage: React.FC = () => {
           title={t('dashboard.stats.my_courses', 'Mes cours')}
           value={data.courses_count || 0}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>}
-          gradient="bg-gradient-to-br from-blue-500 to-blue-700"
+          tone="blue"
           loading={loading}
         />
         <StatCard
           title={t('students.title', 'Étudiants')}
           value={data.students_count || "-"}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-          gradient="bg-gradient-to-br from-emerald-500 to-emerald-700"
+          tone="green"
           loading={loading}
         />
         <StatCard
           title={t('dashboard.stats.pending_grades', 'Notes en attente')}
           value={"-"}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-          gradient="bg-gradient-to-br from-orange-500 to-red-600"
+          tone="orange"
           subtitle="À corriger"
           loading={loading}
         />
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+      <div className="surface-panel p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold text-gray-900">{t('dashboard.sections.todays_schedule', "Emploi du temps d'aujourd'hui")}</h3>
           <span className="text-sm text-gray-500">{new Date().toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
@@ -324,7 +341,7 @@ const DashboardPage: React.FC = () => {
           title={t('dashboard.stats.gpa', 'Moyenne générale')}
           value={data.average || "N/A"}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
-          gradient="bg-gradient-to-br from-blue-500 to-indigo-700"
+          tone="blue"
           subtitle={t('dashboard.sections.recent_grades', 'Semestre actuel')}
           loading={loading}
         />
@@ -332,21 +349,21 @@ const DashboardPage: React.FC = () => {
           title={t('dashboard.stats.courses_enrolled', 'Cours inscrits')}
           value={data.courses_count || 0}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>}
-          gradient="bg-gradient-to-br from-emerald-500 to-teal-700"
+          tone="green"
           loading={loading}
         />
         <StatCard
           title={t('dashboard.stats.credits_validated', 'Crédits validés')}
           value={`${data.credits_validated || 0}/${data.credits_total || 60}`}
           icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>}
-          gradient="bg-gradient-to-br from-purple-500 to-purple-700"
+          tone="earth"
           subtitle={`${data.credits_total ? Math.round(((data.credits_validated || 0) / data.credits_total) * 100) : 0}% complété`}
           loading={loading}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div className="surface-panel p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">{t('dashboard.sections.todays_schedule', "Emploi du temps d'aujourd'hui")}</h3>
           </div>
@@ -363,7 +380,7 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        <div className="surface-panel p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">{t('dashboard.sections.recent_grades', 'Dernières notes')}</h3>
             <button className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
@@ -388,22 +405,25 @@ const DashboardPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="relative overflow-hidden rounded-3xl bg-blue-950 p-6 text-white shadow-floating sm:p-8">
+        <div className="absolute -end-12 -top-16 h-48 w-48 rounded-full border-[28px] border-orange-400/20" />
+        <div className="absolute -bottom-20 start-1/3 h-44 w-44 rounded-full bg-green-500/20 blur-3xl" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdjJoLTYweiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')]" />
         <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+            <div className="rounded-2xl bg-white/10 p-3 text-orange-300 backdrop-blur-sm ring-1 ring-white/10">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold rtl:text-right">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-300">Université Privée Attawoune</p>
+              <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl rtl:text-right">
                 {t(getWelcomeMessageKey())}, {user?.first_name}!
               </h1>
-              <p className="text-white/80 mt-1 rtl:text-right">
+              <p className="mt-2 text-sm font-medium text-blue-100/75 sm:text-base rtl:text-right">
                 {t('dashboard.subtitle', { date: new Date().toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) })}
               </p>
             </div>

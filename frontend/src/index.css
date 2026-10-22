@@ -1,17 +1,250 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-width: 320px;
+    background: rgb(var(--ui-canvas));
+    color: rgb(var(--ui-foreground));
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+
+  html[dir='rtl'] {
+    font-family: var(--font-arabic);
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: rgb(var(--ui-canvas));
+    color: rgb(var(--ui-foreground));
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 3px solid rgb(var(--ui-ring) / 0.35);
+    outline-offset: 2px;
+  }
+
+  .tabular-nums,
+  [data-numeric='true'] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: rgb(var(--ui-success) / 0.2);
+    color: rgb(var(--ui-primary-strong));
+  }
+
+  code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer components {
+  .skip-link {
+    position: fixed;
+    inset-block-start: var(--space-4);
+    inset-inline-start: var(--space-4);
+    z-index: 100;
+    min-height: 44px;
+    transform: translateY(-200%);
+    border-radius: var(--radius-control);
+    background: rgb(var(--ui-primary-strong));
+    color: rgb(var(--ui-on-primary));
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    box-shadow: var(--elevation-floating);
+    transition: transform var(--motion-fast) ease;
+  }
+
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    transform: translateY(0);
+  }
+
+  /*
+   * Mobile navigation slides away from the logical start edge. Keep this in
+   * CSS so the RTL transform cannot override the desktop sticky sidebar.
+   *
+   * The hidden offset is a CSS variable per direction so the open-state rule
+   * (lower specificity) still wins: `html[dir='rtl'] .app-sidebar` would
+   * otherwise out-specify `.app-sidebar.app-sidebar-open` and the drawer
+   * would never become visible on mobile in RTL.
+   */
+  .app-sidebar {
+    --sidebar-hidden-x: -100%;
+    transform: translateX(var(--sidebar-hidden-x));
+  }
+
+  html[dir='rtl'] .app-sidebar {
+    --sidebar-hidden-x: 100%;
+  }
+
+  .app-sidebar.app-sidebar-open {
+    transform: translateX(0);
+  }
+
+  .app-canvas {
+    background-color: rgb(var(--ui-canvas));
+    background-image:
+      radial-gradient(circle at 92% 4%, rgb(var(--ui-success) / 0.1), transparent 24rem),
+      radial-gradient(circle at 10% 92%, rgb(var(--ui-warning) / 0.09), transparent 22rem);
+  }
+
+  .app-content {
+    @apply mx-auto w-full max-w-[1600px] animate-fade-up px-4 py-5 sm:px-6 sm:py-7 lg:px-8;
+  }
+
+  .surface-panel {
+    @apply border border-ui-border/80 bg-ui-surface;
+    border-radius: var(--radius-panel);
+    box-shadow: var(--elevation-panel);
+  }
+
+  .surface-subtle {
+    @apply rounded-xl border border-ui-border/70 bg-ui-surface-muted/80;
+  }
+
+  .brand-kicker {
+    @apply text-xs font-bold uppercase tracking-[0.18em] text-ui-success-strong;
+  }
+
+  .brand-title {
+    @apply text-2xl font-extrabold tracking-tight text-ui-foreground sm:text-3xl;
+  }
+
+  .brand-subtitle {
+    @apply mt-1 text-sm leading-6 text-ui-muted sm:text-base;
+  }
+
+  .brand-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 bg-ui-primary px-4 py-2.5 text-sm font-bold text-ui-on-primary shadow-md transition hover:-translate-y-0.5 hover:bg-ui-primary-strong hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50;
+    border-radius: var(--radius-control);
+    transition-duration: var(--motion-standard);
+  }
+
+  .brand-button-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 border border-ui-border bg-ui-surface px-4 py-2.5 text-sm font-bold text-ui-foreground shadow-sm transition hover:border-ui-primary hover:bg-ui-surface-muted hover:text-ui-primary disabled:cursor-not-allowed disabled:opacity-50;
+    border-radius: var(--radius-control);
+    transition-duration: var(--motion-standard);
+  }
+
+  .brand-input {
+    @apply block min-h-11 w-full border border-ui-border bg-ui-surface px-3.5 py-2.5 text-sm text-ui-foreground shadow-sm outline-none transition placeholder:text-ui-muted focus:border-ui-primary focus:ring-4 focus:ring-ui-primary/15;
+    border-radius: var(--radius-control);
+    transition-duration: var(--motion-standard);
+  }
+
+  .brand-label {
+    @apply mb-1.5 block text-sm font-semibold text-ui-foreground;
+  }
+
+  .brand-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-sidebar,
+  html[dir='rtl'] .app-sidebar,
+  .app-sidebar.app-sidebar-open {
+    transform: none;
+  }
+}
+
+/* Shared polish for legacy screens while they are progressively migrated. */
+.app-main table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.app-main thead {
+  background: linear-gradient(90deg, rgb(var(--ui-surface-muted)), rgb(var(--ui-success) / 0.06));
+}
+
+.app-main tbody tr {
+  transition: background-color var(--motion-fast) ease, transform var(--motion-fast) ease;
+}
+
+.app-main tbody tr:hover {
+  background-color: rgb(var(--ui-surface-muted) / 0.75);
+}
+
+.app-main input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.app-main select,
+.app-main textarea {
+  border-color: rgb(var(--ui-border));
+}
+
+.app-main input:not([type='checkbox']):not([type='radio']):not([type='file']):focus,
+.app-main select:focus,
+.app-main textarea:focus {
+  border-color: rgb(var(--ui-primary));
+  box-shadow: 0 0 0 4px rgb(var(--ui-ring) / 0.1);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--ui-primary) / 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgb(var(--ui-primary) / 0.3);
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

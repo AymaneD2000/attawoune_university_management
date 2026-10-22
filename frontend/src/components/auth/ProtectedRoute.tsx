@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import logo from '../../assets/logo.jpg';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,8 +14,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="app-canvas flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="relative mx-auto h-24 w-24">
+            <div className="absolute inset-0 animate-spin rounded-3xl border-4 border-blue-100 border-t-blue-600" />
+            <img src={logo} alt="Attawoune" className="absolute inset-3 rounded-2xl bg-white object-cover" />
+          </div>
+          <p className="mt-4 text-sm font-bold text-blue-900">Chargement de votre espace…</p>
+        </div>
       </div>
     );
   }

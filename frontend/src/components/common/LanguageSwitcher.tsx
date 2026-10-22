@@ -1,40 +1,33 @@
 import React, { useEffect } from 'react';
+import { LanguageIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
-const LanguageSwitcher: React.FC = () => {
-    const { i18n } = useTranslation();
+interface LanguageSwitcherProps {
+  compact?: boolean;
+}
 
-    const changeLanguage = (lng: string) => {
-        i18n.changeLanguage(lng);
-    };
+const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ compact = false }) => {
+  const { i18n } = useTranslation();
+  const isArabic = i18n.language?.startsWith('ar');
 
-    useEffect(() => {
-        document.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
-        document.documentElement.lang = i18n.language;
-    }, [i18n.language]);
+  useEffect(() => {
+    document.dir = isArabic ? 'rtl' : 'ltr';
+    document.documentElement.lang = isArabic ? 'ar' : 'fr';
+  }, [isArabic]);
 
-    return (
-        <div className="flex bg-gray-100 rounded-lg p-1 mx-2">
-            <button
-                onClick={() => changeLanguage('fr')}
-                className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${i18n.language === 'fr'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-            >
-                FR
-            </button>
-            <button
-                onClick={() => changeLanguage('ar')}
-                className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${i18n.language === 'ar'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-            >
-                عربي
-            </button>
-        </div>
-    );
+  return (
+    <button
+      type="button"
+      onClick={() => i18n.changeLanguage(isArabic ? 'fr' : 'ar')}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 shadow-sm transition hover:border-green-200 hover:bg-green-50 hover:text-green-800 ${
+        compact ? 'h-11 min-w-11 px-3 text-xs' : 'min-h-11 px-4 text-sm'
+      }`}
+      aria-label={isArabic ? 'Passer au français' : 'التبديل إلى العربية'}
+    >
+      <LanguageIcon className="h-5 w-5 text-green-600" />
+      <span className={compact ? 'hidden md:inline' : ''}>{isArabic ? 'FR' : 'عربي'}</span>
+    </button>
+  );
 };
 
 export default LanguageSwitcher;

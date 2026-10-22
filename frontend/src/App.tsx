@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import MainLayout from './components/layout/MainLayout';
+import { ToastProvider } from './components/ui/ToastProvider';
 
 // Auth pages
 import LoginPage from './pages/auth/LoginPage';
@@ -12,6 +13,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 // Main pages
 import DashboardPage from './pages/dashboard/DashboardPage';
 import StudentsPage from './pages/students/StudentsPage';
+import StudentProfilePage from './pages/students/profile/StudentProfilePage';
 import TeachersPage from './pages/teachers/TeachersPage';
 import CoursesPage from './pages/academics/CoursesPage';
 import GradesPage from './pages/academics/GradesPage';
@@ -30,6 +32,8 @@ import LevelsPage from './pages/structure/LevelsPage';
 
 // Admin pages
 import UsersPage from './pages/admin/UsersPage';
+import AuditLogPage from './pages/admin/AuditLogPage';
+import StatusPage from './components/common/StatusPage';
 
 import './index.css';
 
@@ -45,8 +49,9 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
+      <ToastProvider>
+        <AuthProvider>
+          <Router>
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
@@ -66,6 +71,7 @@ function App() {
 
               {/* Students */}
               <Route path="students" element={<StudentsPage />} />
+              <Route path="students/:studentId" element={<StudentProfilePage />} />
 
               {/* Teachers */}
               <Route path="teachers" element={<TeachersPage />} />
@@ -94,42 +100,24 @@ function App() {
 
               {/* Administration */}
               <Route path="admin/users" element={<UsersPage />} />
+              <Route path="admin/audit" element={<AuditLogPage />} />
             </Route>
 
             {/* Unauthorized */}
             <Route
               path="/unauthorized"
-              element={
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold text-red-600">403</h1>
-                    <p className="text-gray-500 mt-2">Accès non autorisé</p>
-                    <a href="/dashboard" className="text-primary-600 hover:underline mt-4 inline-block">
-                      Retour au tableau de bord
-                    </a>
-                  </div>
-                </div>
-              }
+              element={<StatusPage code="403" title="Accès non autorisé" description="Votre rôle ne permet pas d'accéder à cette section de la plateforme." />}
             />
 
             {/* 404 */}
             <Route
               path="*"
-              element={
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold text-gray-900">404</h1>
-                    <p className="text-gray-500 mt-2">Page non trouvée</p>
-                    <a href="/dashboard" className="text-primary-600 hover:underline mt-4 inline-block">
-                      Retour au tableau de bord
-                    </a>
-                  </div>
-                </div>
-              }
+              element={<StatusPage code="404" title="Page introuvable" description="La page demandée n'existe pas ou a été déplacée." />}
             />
           </Routes>
-        </Router>
-      </AuthProvider>
+          </Router>
+        </AuthProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

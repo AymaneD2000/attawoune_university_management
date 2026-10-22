@@ -1,0 +1,59 @@
+:root {
+  color-scheme: light;
+  --ui-primary: 26 76 145;
+  --ui-primary-strong: 20 46 84;
+  --ui-on-primary: 255 255 255;
+  --ui-success: 27 171 83;
+  --ui-success-strong: 21 128 61;
+  --ui-info: 26 76 145;
+  --ui-warning: 229 151 65;
+  --ui-danger: 220 38 38;
+  --ui-earth: 106 49 13;
+  --ui-canvas: 244 247 246;
+  --ui-surface: 255 255 255;
+  --ui-surface-muted: 241 245 244;
+  --ui-foreground: 15 23 42;
+  --ui-muted: 100 116 139;
+  --ui-border: 216 226 222;
+  --ui-ring: 26 76 145;
+  --ui-disabled: 148 163 184;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-arabic: 'Noto Sans Arabic', system-ui, sans-serif;
+  --radius-control: 0.75rem;
+  --radius-panel: 1.125rem;
+  --elevation-panel: 0 10px 30px rgb(20 46 84 / 0.08);
+  --elevation-floating: 0 22px 60px rgb(11 27 51 / 0.22);
+  --z-sticky: 30;
+  --z-drawer: 50;
+  --z-dialog: 70;
+  --z-toast: 90;
+  --motion-fast: 160ms;
+  --motion-standard: 220ms;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --ui-primary: 87 148 211;
+  --ui-primary-strong: 20 46 84;
+  --ui-on-primary: 255 255 255;
+  --ui-success: 74 201 120;
+  --ui-success-strong: 34 197 94;
+  --ui-info: 141 184 228;
+  --ui-warning: 242 185 94;
+  --ui-danger: 248 113 113;
+  --ui-earth: 229 151 65;
+  --ui-canvas: 11 27 51;
+  --ui-surface: 20 46 84;
+  --ui-surface-muted: 21 54 100;
+  --ui-foreground: 248 250 252;
+  --ui-muted: 203 213 225;
+  --ui-border: 51 65 85;
+  --ui-ring: 141 184 228;
+  --ui-disabled: 100 116 139;
+}
