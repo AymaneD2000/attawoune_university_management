@@ -5,7 +5,7 @@ Plateforme de gestion universitaire complète pour l'Université Attawoune.
 ## Technologies
 
 - **Backend**: Django 5.2 + Django REST Framework
-- **Frontend**: React 18 + TypeScript + Tailwind CSS
+- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
 - **Base de données**: SQLite (développement) / PostgreSQL (production)
 - **Authentification**: JWT (JSON Web Tokens)
 
@@ -50,6 +50,9 @@ source venv/bin/activate  # Linux/Mac
 # Installer les dépendances
 pip install -r requirements.txt
 
+# Profil local explicite (facultatif : development est la valeur par défaut)
+export DJANGO_ENV=development
+
 # Appliquer les migrations
 python manage.py migrate
 
@@ -66,18 +69,18 @@ python manage.py runserver
 cd frontend
 
 # Installer les dépendances
-npm install
+npm ci
 
 # Démarrer le serveur de développement
-npm start
+npm run dev
 ```
 
 ## Accès
 
-- **Backend API**: http://localhost:8000/api/
+- **Backend API**: http://localhost:8000/api/v1/
 - **Documentation API (Swagger)**: http://localhost:8000/api/docs/
 - **Admin Django**: http://localhost:8000/admin/
-- **Frontend**: http://localhost:3000/
+- **Frontend**: http://localhost:5173/
 
 ## Comptes par défaut
 
@@ -135,14 +138,14 @@ npm start
 
 | Module | Endpoint |
 |--------|----------|
-| Auth | `/api/auth/token/` |
-| Utilisateurs | `/api/accounts/` |
-| Université | `/api/university/` |
-| Étudiants | `/api/students/` |
-| Enseignants | `/api/teachers/` |
-| Académique | `/api/academics/` |
-| Finance | `/api/finance/` |
-| Emplois du temps | `/api/scheduling/` |
+| Auth | `/api/v1/auth/token/` |
+| Utilisateurs | `/api/v1/accounts/` |
+| Université | `/api/v1/university/` |
+| Étudiants | `/api/v1/students/` |
+| Enseignants | `/api/v1/teachers/` |
+| Académique | `/api/v1/academics/` |
+| Finance | `/api/v1/finance/` |
+| Emplois du temps | `/api/v1/scheduling/` |
 
 ## Licence
 
