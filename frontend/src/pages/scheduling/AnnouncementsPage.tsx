@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Faculty, Program, PaginatedResponse } from '../../types';
+import { Faculty, Program } from '../../types';
 import universityService from '../../services/universityService';
 
 interface Announcement {

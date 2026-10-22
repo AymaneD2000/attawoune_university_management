@@ -2,10 +2,13 @@ import api from './api';
 
 export interface StudentStats {
     avg_score: number;
+    avg_percentage: number;
     max_score: number;
     min_score: number;
     total_exams: number;
     absences: number;
+    pass_rate: number;
+    trend_delta: number;
 }
 
 export interface Grade {
@@ -16,19 +19,30 @@ export interface Grade {
     exam: number;
     exam_type: string;
     exam_type_display: string;
+    exam_date: string;
     course_name: string;
     course_code: string;
     score: string;
     max_score: string;
+    exam_weight: string;
+    percentage: number | string;
     is_absent: boolean;
     remarks: string;
     graded_by_name: string;
     graded_at: string;
 }
 
+export interface GradeTypeBreakdown {
+    type: string;
+    label: string;
+    count: number;
+    average_score: number;
+}
+
 export interface StudentGradeHistory {
     grades: Grade[];
     stats: StudentStats;
+    type_breakdown: GradeTypeBreakdown[];
 }
 
 export const gradesService = {

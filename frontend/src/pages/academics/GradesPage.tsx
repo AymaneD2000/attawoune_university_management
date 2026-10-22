@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ArrowDownTrayIcon, ChartBarSquareIcon, ClipboardDocumentCheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Course, Semester, Student } from '../../types';
+import { Course, Semester, Student, AcademicYear, Level } from '../../types';
 import { gradesService } from '../../services/gradesService';
 import ImportGradesModal from './ImportGradesModal';
 import StudentGradesViewModal from './StudentGradesViewModal';
+import PageHeader from '../../components/common/PageHeader';
 
 interface CourseGrade {
   id: number;
@@ -94,6 +96,23 @@ const EVALUATION_TYPES_LIST: EvaluationType[] = [
   'MIDTERM', 'FINAL', 'QUIZ', 'PRACTICAL', 'PROJECT', 'ORAL', 'RESIT'
 ];
 
+// Curriculum semesters S1-S6 = course Level order (L1/L2/L3) x academic-year
+// semester (S1/S2). The grade still persists to the underlying year Semester.
+const CURRICULUM_SEMESTERS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'] as const;
+type CurriculumSemester = typeof CURRICULUM_SEMESTERS[number];
+const SEM_MAP: Record<CurriculumSemester, { order: number; yearType: 'S1' | 'S2' }> = {
+  S1: { order: 1, yearType: 'S1' }, S2: { order: 1, yearType: 'S2' },
+  S3: { order: 2, yearType: 'S1' }, S4: { order: 2, yearType: 'S2' },
+  S5: { order: 3, yearType: 'S1' }, S6: { order: 3, yearType: 'S2' },
+};
+// Resolve a curriculum semester code (S1-S6) to the real academic-year Semester id.
+const yearSemId = (code: string, semesters: Semester[]): number | '' => {
+  const m = SEM_MAP[code as CurriculumSemester];
+  if (!m) return '';
+  const s = semesters.find(x => x.semester_type === m.yearType);
+  return s ? s.id : '';
+};
+
 interface Exam {
   id: number;
   course: number;
@@ -105,7 +124,7 @@ interface Exam {
 }
 
 const GradesPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   // Data state
@@ -113,13 +132,15 @@ const GradesPage: React.FC = () => {
   const [individualGrades, setIndividualGrades] = useState<IndividualGrade[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [levels, setLevels] = useState<Level[]>([]);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [, setCurrentAcademicYear] = useState<AcademicYear | null>(null);
 
   // UI state
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
+  const [, setSuccess] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'final' | 'evaluation'>('final');
 
   // Filter state
@@ -127,7 +148,7 @@ const GradesPage: React.FC = () => {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [selectedEvalType, setSelectedEvalType] = useState<EvaluationType>('MIDTERM');
   const [studentSearch, setStudentSearch] = useState('');
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  const [selectedStudentId] = useState<number | null>(null);
 
   // Grade entry state
   const [showGradeModal, setShowGradeModal] = useState(false); // Exam state for grade entry
@@ -143,12 +164,13 @@ const GradesPage: React.FC = () => {
   // Fetch exams for filter dropdown
   useEffect(() => {
     const fetchExams = async () => {
-      if (!selectedCourse || !selectedSemester) {
+      const semId = yearSemId(selectedSemester, semesters);
+      if (!selectedCourse || !semId) {
         setExamsForFilter([]);
         return;
       }
       try {
-        const params: any = { course: selectedCourse, semester: selectedSemester, page_size: 50 };
+        const params: any = { course: selectedCourse, semester: semId, page_size: 50 };
         if (selectedEvalType) params.exam_type = selectedEvalType;
         const res = await api.get('/academics/exams/', { params });
         setExamsForFilter(res.data.results || res.data);
@@ -157,34 +179,50 @@ const GradesPage: React.FC = () => {
       }
     };
     fetchExams();
-  }, [selectedCourse, selectedSemester, selectedEvalType]);
+  }, [selectedCourse, selectedSemester, selectedEvalType, semesters]);
   const [gradeInputs, setGradeInputs] = useState<GradeInput[]>([]);
 
   // Bulletin & Modals state
   const [showBulletinModal, setShowBulletinModal] = useState(false);
   const [bulletinData, setBulletinData] = useState<BulletinData | null>(null);
-  const [generatingBulletin, setGeneratingBulletin] = useState(false);
+  const [bulletinPdfUrl, setBulletinPdfUrl] = useState<string | null>(null);
+  const [, setGeneratingBulletin] = useState(false);
+
+  useEffect(() => () => {
+    if (bulletinPdfUrl) window.URL.revokeObjectURL(bulletinPdfUrl);
+  }, [bulletinPdfUrl]);
 
   const [showImportModal, setShowImportModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyStudent, setHistoryStudent] = useState<Student | null>(null);
-
-  const formatSemesterName = (sem: Semester) => {
-    const typeLabel = sem.semester_type === 'S1' ? t('common.s1', 'Semestre 1') : t('common.s2', 'Semestre 2');
-    return `${typeLabel} (${sem.academic_year_name || sem.academic_year})`;
-  };
+  const currentStudent = user?.role === 'STUDENT'
+    ? allStudents.find((student) => student.user === user.id) || allStudents[0] || null
+    : null;
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [coursesRes, semestersRes, studentsRes] = await Promise.all([
-          api.get('/academics/courses/', { params: { page_size: 100 } }),
-          api.get('/university/semesters/', { params: { page_size: 50 } }),
-          api.get('/students/', { params: { page_size: 500, status: 'ACTIVE' } })
+        // 1. Fetch current academic year first
+        const yearRes = await api.get('/university/academic-years/', { params: { is_current: true } });
+        const currentYear = yearRes.data.results?.[0] || yearRes.data?.[0];
+        setCurrentAcademicYear(currentYear || null);
+
+        // 2. Fetch other data, filtering semesters by current year if available
+        const [coursesRes, semestersRes, studentsRes, levelsRes] = await Promise.all([
+          api.get('/academics/courses/', { params: { page_size: 1000 } }),
+          api.get('/university/semesters/', {
+            params: {
+              page_size: 50,
+              academic_year: currentYear?.id // Filter by current academic year
+            }
+          }),
+          api.get('/students/', { params: { page_size: 500, status: 'ACTIVE' } }),
+          api.get('/university/levels/', { params: { page_size: 50 } })
         ]);
         setCourses(coursesRes.data.results || coursesRes.data);
         setSemesters(semestersRes.data.results || semestersRes.data);
         setAllStudents(studentsRes.data.results || studentsRes.data);
+        setLevels(levelsRes.data.results || levelsRes.data);
       } catch (err) {
         console.error('Error fetching initial data:', err);
       }
@@ -193,7 +231,8 @@ const GradesPage: React.FC = () => {
   }, []);
 
   const fetchGrades = useCallback(async () => {
-    if (!selectedCourse || !selectedSemester) {
+    const semId = yearSemId(selectedSemester, semesters);
+    if (!selectedCourse || !semId) {
       setGrades([]);
       setIndividualGrades([]);
       return;
@@ -203,13 +242,13 @@ const GradesPage: React.FC = () => {
     setError(null);
     try {
       if (viewMode === 'final') {
-        const params: any = { course: selectedCourse, semester: selectedSemester, page_size: 200 };
+        const params: any = { course: selectedCourse, semester: semId, page_size: 200 };
         if (selectedStudentId) params.student = selectedStudentId;
 
         const response = await api.get('/academics/course-grades/', { params });
         setGrades(response.data.results || response.data);
       } else {
-        const examParams: any = { course: selectedCourse, semester: selectedSemester, page_size: 100 };
+        const examParams: any = { course: selectedCourse, semester: semId, page_size: 100 };
         if (selectedEvalType) examParams.exam_type = selectedEvalType;
 
         // Use examsForFilter if available to avoid double fetch, but best to rely on fresh fetch or current logic
@@ -251,14 +290,15 @@ const GradesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCourse, selectedSemester, viewMode, selectedStudentId, selectedEvalType, filterExamId, courses, t]);
+  }, [selectedCourse, selectedSemester, semesters, viewMode, selectedStudentId, selectedEvalType, filterExamId, courses, t]);
 
   useEffect(() => {
     fetchGrades();
   }, [fetchGrades]);
 
   const openGradeModal = async () => {
-    if (!selectedCourse || !selectedSemester) {
+    const semId = yearSemId(selectedSemester, semesters);
+    if (!selectedCourse || !semId) {
       setError(t('grades.empty', 'Veuillez sélectionner un cours et un semestre'));
       return;
     }
@@ -269,7 +309,7 @@ const GradesPage: React.FC = () => {
       if (!course) return;
 
       const examsRes = await api.get('/academics/exams/', {
-        params: { course: selectedCourse, semester: selectedSemester, page_size: 50 }
+        params: { course: selectedCourse, semester: semId, page_size: 50 }
       });
       setExistingExams(examsRes.data.results || examsRes.data);
 
@@ -329,7 +369,7 @@ const GradesPage: React.FC = () => {
       if (!examId) {
         const examRes = await api.post('/academics/exams/', {
           course: parseInt(selectedCourse),
-          semester: parseInt(selectedSemester),
+          semester: yearSemId(selectedSemester, semesters),
           exam_type: selectedEvalType,
           title: examTitle || `${t(`grades.eval_types.${selectedEvalType.toLowerCase()}`)} - ${new Date().toLocaleDateString()}`,
           max_score: parseFloat(maxScore),
@@ -371,7 +411,7 @@ const GradesPage: React.FC = () => {
     try {
       await api.post('/academics/course-grades/calculate_final_grades/', {
         course_id: selectedCourse,
-        semester_id: selectedSemester
+        semester_id: yearSemId(selectedSemester, semesters)
       });
       setSuccess(t('grades.calculate_success', 'Calcul effectué'));
       fetchGrades();
@@ -383,14 +423,15 @@ const GradesPage: React.FC = () => {
   };
 
   const generateBulletin = async (studentId: number) => {
-    if (!selectedSemester) return;
+    const semId = yearSemId(selectedSemester, semesters);
+    if (!semId) return;
     setGeneratingBulletin(true);
     try {
       // 1. Check if report card already exists
       let reportCardId;
       try {
         const checkRes = await api.get('/academics/report-cards/', {
-          params: { student: studentId, semester: selectedSemester }
+          params: { student: studentId, semester: semId }
         });
         if (checkRes.data.results && checkRes.data.results.length > 0) {
           reportCardId = checkRes.data.results[0].id;
@@ -405,7 +446,7 @@ const GradesPage: React.FC = () => {
       if (!reportCardId) {
         const createRes = await api.post('/academics/report-cards/', {
           student: studentId,
-          semester: parseInt(selectedSemester)
+          semester: semId
         });
         reportCardId = createRes.data.id;
       }
@@ -413,10 +454,14 @@ const GradesPage: React.FC = () => {
       // 3. Calculate GPA to ensure fresh data
       await api.post(`/academics/report-cards/${reportCardId}/calculate_gpa/`);
 
-      // 4. Fetch the full detailed report card (with courses and stats)
-      const detailRes = await api.get(`/academics/report-cards/${reportCardId}/`);
+      // 4. Fetch the detail and the official PDF used by the on-screen preview.
+      const [detailRes, pdfRes] = await Promise.all([
+        api.get(`/academics/report-cards/${reportCardId}/`),
+        api.get(`/academics/report-cards/${reportCardId}/download_pdf/`, { responseType: 'blob' }),
+      ]);
 
       setBulletinData(detailRes.data);
+      setBulletinPdfUrl(window.URL.createObjectURL(new Blob([pdfRes.data], { type: 'application/pdf' })));
       setShowBulletinModal(true);
     } catch (err) {
       console.error('Bulletin error:', err);
@@ -429,15 +474,29 @@ const GradesPage: React.FC = () => {
   const downloadBulletinPDF = async () => {
     if (!bulletinData) return;
     try {
-      const res = await api.get(`/academics/report-cards/${bulletinData.id}/download_pdf/`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      let url = bulletinPdfUrl;
+      let temporaryUrl = false;
+      if (!url) {
+        const res = await api.get(`/academics/report-cards/${bulletinData.id}/download_pdf/`, { responseType: 'blob' });
+        url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+        temporaryUrl = true;
+      }
       const link = document.createElement('a');
       link.href = url;
       link.download = `Bulletin_${bulletinData.student_matricule}.pdf`;
       link.click();
+      if (temporaryUrl) {
+        const urlToRevoke = url;
+        window.setTimeout(() => window.URL.revokeObjectURL(urlToRevoke), 0);
+      }
     } catch (err) {
       console.error('PDF error:', err);
     }
+  };
+
+  const closeBulletin = () => {
+    setShowBulletinModal(false);
+    setBulletinPdfUrl(null);
   };
 
   const getMention = (score: number) => {
@@ -448,22 +507,30 @@ const GradesPage: React.FC = () => {
     return { label: t('grades.mentions.fail'), color: 'text-red-600 bg-red-100' };
   };
 
-  const renderTeacherView = () => (
+  const renderTeacherView = () => {
+    const levelOrderById: Record<number, number> = {};
+    levels.forEach(l => { levelOrderById[l.id] = l.order; });
+    const semMeta = SEM_MAP[selectedSemester as CurriculumSemester];
+    const filteredCourses = semMeta
+      ? courses.filter(c => c.semester_type === semMeta.yearType && levelOrderById[c.level] === semMeta.order)
+      : courses;
+
+    return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow p-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-1">{t('grades.labels.course', 'Cours')}</label>
-            <select className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
-              <option value="">{t('grades.placeholders.select_course')}</option>
-              {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
+            <label className="text-sm font-medium text-gray-700 mb-1">{t('grades.labels.semester', 'Semestre')}</label>
+            <select className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" value={selectedSemester} onChange={(e) => { setSelectedSemester(e.target.value); setSelectedCourse(''); }}>
+              <option value="">{t('grades.placeholders.select_semester')}</option>
+              {CURRICULUM_SEMESTERS.map(code => <option key={code} value={code}>{`${t('grades.labels.semester', 'Semestre')} ${code.slice(1)}`}</option>)}
             </select>
           </div>
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 mb-1">{t('grades.labels.semester', 'Semestre')}</label>
-            <select className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)}>
-              <option value="">{t('grades.placeholders.select_semester')}</option>
-              {semesters.map(s => <option key={s.id} value={s.id}>{formatSemesterName(s)}</option>)}
+            <label className="text-sm font-medium text-gray-700 mb-1">{t('grades.labels.course', 'Cours')}</label>
+            <select className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)} disabled={!selectedSemester}>
+              <option value="">{t('grades.placeholders.select_course')}</option>
+              {filteredCourses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
             </select>
           </div>
           <div className="flex flex-col">
@@ -562,7 +629,7 @@ const GradesPage: React.FC = () => {
                 {viewMode === 'evaluation' && <th className="px-6 py-3 text-left tracking-wider">{t('grades.table.exam', 'Examen')}</th>}
                 <th className="px-6 py-3 text-center tracking-wider">{t('grades.table.score')}</th>
                 <th className="px-6 py-3 text-center tracking-wider">{t('grades.table.mention')}</th>
-                <th className="px-6 py-3 text-center tracking-wider">{t('grades.table.bulletin')}</th>
+                <th className="px-6 py-3 text-center tracking-wider">{t('common.actions', 'Actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -600,7 +667,23 @@ const GradesPage: React.FC = () => {
                     })()}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    {viewMode === 'final' && <button onClick={() => generateBulletin(g.student)} className="text-indigo-600 hover:text-indigo-800 font-medium text-xs border border-indigo-200 px-2 py-1 rounded hover:bg-indigo-50">{t('grades.buttons.generate')}</button>}
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const student = allStudents.find((item) => item.id === g.student);
+                          if (student) {
+                            setHistoryStudent(student);
+                            setShowHistoryModal(true);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-black text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                      >
+                        <ChartBarSquareIcon className="h-4 w-4" />
+                        {t('grades.buttons.progression', 'Progression')}
+                      </button>
+                      {viewMode === 'final' && <button onClick={() => generateBulletin(g.student)} className="rounded-lg border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-black text-green-700 transition hover:border-green-300 hover:bg-green-100">{t('grades.buttons.generate')}</button>}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -616,13 +699,14 @@ const GradesPage: React.FC = () => {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderStudentView = () => (
     <div className="space-y-6">
       <select className="px-3 py-2 border rounded-lg" value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)}>
         <option value="">{t('grades.placeholders.select_semester')}</option>
-        {semesters.map(s => <option key={s.id} value={s.id}>{formatSemesterName(s)}</option>)}
+        {CURRICULUM_SEMESTERS.map(code => <option key={code} value={code}>{`${t('grades.labels.semester', 'Semestre')} ${code.slice(1)}`}</option>)}
       </select>
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="w-full">
@@ -648,12 +732,26 @@ const GradesPage: React.FC = () => {
   );
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          {user?.role === 'STUDENT' ? t('grades.student.title', 'Mes Notes') : t('grades.title', 'Gestion des Notes')}
-        </h1>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow={t('grades.header_eyebrow', 'Suivi académique')}
+        title={user?.role === 'STUDENT' ? t('grades.student.title', 'Mes Notes') : t('grades.title', 'Gestion des Notes')}
+        description={t('grades.subtitle', 'Suivez les résultats, les évaluations et la progression des étudiants.')}
+        icon={<ClipboardDocumentCheckIcon className="h-6 w-6" />}
+        actions={currentStudent && (
+          <button
+            type="button"
+            onClick={() => {
+              setHistoryStudent(currentStudent);
+              setShowHistoryModal(true);
+            }}
+            className="brand-button"
+          >
+            <ChartBarSquareIcon className="h-5 w-5" />
+            {t('grades.buttons.my_progression', 'Voir ma progression')}
+          </button>
+        )}
+      />
 
       {user?.role === 'STUDENT' ? renderStudentView() : renderTeacherView()}
 
@@ -746,165 +844,48 @@ const GradesPage: React.FC = () => {
 
       {/* Bulletin Modal */}
       {showBulletinModal && bulletinData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white shadow-2xl w-full max-w-[210mm] min-h-[297mm] flex flex-col relative my-8">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowBulletinModal(false)}
-              className="absolute -right-12 top-0 text-white text-3xl hover:text-gray-200 transition-colors"
-              title={t('common.close')}
-            >
-              &times;
-            </button>
-
-            {/* A4 Content Container */}
-            <div className="p-[15mm] flex-1 flex flex-col font-sans text-gray-800">
-
-              {/* Header */}
-              <div className="flex justify-between items-start border-b-2 border-indigo-900 pb-6 mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-indigo-900 rounded-lg flex items-center justify-center text-white font-bold text-2xl shadow-md">
-                    UM
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-bold text-indigo-900 uppercase tracking-widest leading-tight">University<br />Management</h1>
-                    <p className="text-xs text-sim font-medium text-gray-500 mt-1 uppercase tracking-wide">Excellence & Innovation</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <h2 className="text-2xl font-serif font-bold text-gray-900 uppercase tracking-wide mb-1">{t('grades.bulletin.title', 'Bulletin de Notes')}</h2>
-                  <div className="inline-block px-3 py-1 bg-indigo-50 rounded text-indigo-700 font-medium text-sm">
-                    {bulletinData.semester_name} • {bulletinData.academic_year}
-                  </div>
-                </div>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-2 backdrop-blur-sm sm:p-4">
+          <div className="flex h-[calc(100dvh-1rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:h-[92dvh]">
+            <header className="flex shrink-0 flex-col gap-3 border-b border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-green-700">
+                  {t('grades.bulletin.preview', 'Aperçu officiel du bulletin')}
+                </p>
+                <h2 className="mt-1 truncate text-lg font-black text-slate-950 sm:text-xl">
+                  {bulletinData.student_name}
+                </h2>
+                <p className="mt-1 text-xs font-bold text-slate-500">
+                  {bulletinData.student_matricule} · {bulletinData.academic_year}
+                </p>
               </div>
-
-              {/* Student Info Grid */}
-              <div className="bg-gray-50 p-6 rounded-sm border-l-4 border-indigo-600 mb-8 grid grid-cols-2 gap-8 shadow-sm">
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">{t('grades.table.student')}</p>
-                  <p className="text-lg font-bold text-gray-900">{bulletinData.student_name}</p>
-                  <p className="text-xs text-gray-600 font-mono mt-0.5">ID: {bulletinData.student_matricule}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-1">{t('students.table.program')}</p>
-                  <p className="text-base font-semibold text-gray-800">{bulletinData.student_program}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">{t('students.table.level')}: {bulletinData.student_level}</p>
-                </div>
-              </div>
-
-              {/* Grades Table */}
-              <div className="mb-8 flex-1">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-indigo-900 text-white text-[10px] uppercase tracking-wider">
-                      <th className="py-3 px-3 text-left w-1/4 rounded-tl-sm">{t('grades.table.course')}</th>
-                      <th className="py-3 px-1 text-center w-12">Coeff</th>
-                      <th className="py-3 px-1 text-center w-12">Credits</th>
-                      <th className="py-3 px-3 text-left">{t('grades.table.evaluations', 'Évaluations')}</th>
-                      <th className="py-3 px-3 text-center w-24">{t('grades.history.avg', 'Moyenne')}</th>
-                      <th className="py-3 px-2 text-center w-24">Stats</th>
-                      <th className="py-3 px-2 text-center w-16 rounded-tr-sm">{t('grades.table.mention')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-xs">
-                    {bulletinData.courses.map((course, idx) => (
-                      <tr key={idx} className={`border-b border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                        <td className="py-3 px-3 align-top">
-                          <div className="font-bold text-gray-800 leading-tight mb-0.5">{course.course_name}</div>
-                          <div className="text-[10px] text-gray-400 font-mono">{course.course_code}</div>
-                        </td>
-                        <td className="py-3 px-1 text-center align-top text-gray-500">{course.coefficient}</td>
-                        <td className="py-3 px-1 text-center align-top text-gray-500">{course.credits}</td>
-                        <td className="py-3 px-3 align-top">
-                          <div className="flex flex-wrap gap-1.5">
-                            {course.evaluations.map((ev, i) => (
-                              <span key={i} className="inline-flex items-center text-[10px] bg-white border border-gray-200 px-1.5 py-0.5 rounded text-gray-600 whitespace-nowrap">
-                                <span className="font-semibold mr-1">{ev.name}:</span>
-                                {parseFloat(ev.score).toFixed(1)} <span className="text-gray-300 mx-0.5">/</span> {parseFloat(ev.max_score).toFixed(0)}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-3 px-3 text-center align-top">
-                          <div className="font-bold text-gray-900 text-sm">
-                            {parseFloat(course.final_score).toFixed(2)}
-                          </div>
-                          <div className="text-[10px] text-gray-400">/ 20</div>
-                        </td>
-                        <td className="py-3 px-2 text-center align-top text-[10px]">
-                          <div className="text-gray-500 mb-0.5">Av: {course.class_avg}</div>
-                          <div className="font-bold text-indigo-600 bg-indigo-50 inline-block px-1.5 rounded-sm">R: {course.rank}/{course.total_students}</div>
-                        </td>
-                        <td className="py-3 px-2 text-center align-top">
-                          <span className={`inline-block w-6 h-6 leading-6 rounded-full text-[10px] font-bold ${parseFloat(course.final_score) >= 10
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-50 text-red-600'
-                            }`}>
-                            {course.grade_letter}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Summary Footer */}
-              <div className="mt-8 bg-gray-50 border-t-2 border-indigo-900 p-6 rounded-sm">
-                <div className="grid grid-cols-4 gap-6 text-center divide-x divide-gray-200">
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">{t('grades.history.avg')}</p>
-                    <p className="text-3xl font-bold text-indigo-900">{bulletinData.gpa}<span className="text-sm text-gray-400 font-normal">/20</span></p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Total Credits</p>
-                    <p className="text-2xl font-bold text-gray-800">{bulletinData.credits_earned} <span className="text-sm text-gray-400 font-normal">/ {bulletinData.total_credits}</span></p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Rank</p>
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-2xl font-bold text-indigo-600">#{bulletinData.rank}</span>
-                      {bulletinData.rank === 1 && <span className="text-xl">🏆</span>}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Decision</p>
-                    <p className={`text-xl font-bold uppercase tracking-wide ${parseFloat(bulletinData.gpa) >= 10 ? 'text-green-600' : 'text-red-600'}`}>
-                      {parseFloat(bulletinData.gpa) >= 10 ? 'ADMIS' : 'AJOURNÉ'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Signatures */}
-              <div className="mt-16 grid grid-cols-2 gap-20">
-                <div className="border-t border-gray-300 pt-4 text-center">
-                  <p className="text-xs font-bold text-gray-800 uppercase tracking-widest mb-8">L'Étudiant(e)</p>
-                </div>
-                <div className="border-t border-gray-300 pt-4 text-center">
-                  <p className="text-xs font-bold text-gray-800 uppercase tracking-widest mb-8">Le Doyen / L'Administration</p>
-                  <div className="text-[10px] text-gray-400 text-right mt-2 flex justify-end items-center gap-1">
-                    Generated via UMS • {new Date(bulletinData.generated_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Bar */}
-            <div className="p-4 bg-gray-900/95 text-white flex justify-between items-center backdrop-blur shadow-2xl sticky bottom-0 z-10">
-              <div className="text-sm opacity-75 flex items-center gap-2">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                Professional Preview Mode
-              </div>
-              <div className="flex gap-4">
-                <button onClick={() => setShowBulletinModal(false)} className="px-6 py-2 border border-gray-600 rounded hover:bg-gray-800 transition text-sm">
-                  {t('common.close')}
+              <div className="flex shrink-0 items-center gap-2">
+                <button type="button" onClick={downloadBulletinPDF} className="brand-button min-h-10">
+                  <ArrowDownTrayIcon className="h-5 w-5" />
+                  {t('grades.buttons.download_pdf', 'Télécharger PDF')}
                 </button>
-                <button onClick={downloadBulletinPDF} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded shadow-lg font-bold flex items-center gap-2 text-sm transition-transform active:scale-95">
-                  <span>🖨️</span> {t('grades.buttons.download_pdf', 'Télécharger PDF')}
+                <button
+                  type="button"
+                  onClick={closeBulletin}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                  aria-label={t('common.close', 'Fermer')}
+                >
+                  <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
+            </header>
+
+            <div className="min-h-0 flex-1 bg-slate-200 p-1 sm:p-3">
+              {bulletinPdfUrl ? (
+                <iframe
+                  title={t('grades.bulletin.preview', 'Aperçu officiel du bulletin')}
+                  src={`${bulletinPdfUrl}#toolbar=0&navpanes=0`}
+                  className="h-full w-full rounded-lg bg-white"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center rounded-lg bg-white">
+                  <span className="h-9 w-9 animate-spin rounded-full border-4 border-green-200 border-t-green-600" />
+                </div>
+              )}
             </div>
           </div>
         </div>

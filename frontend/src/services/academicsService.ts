@@ -1,6 +1,22 @@
 import api from './api';
 import { Course, PaginatedResponse } from '../types';
 
+export interface CourseMutationPayload {
+    code: string;
+    name: string;
+    program: number;
+    level: number;
+    semester_type: Course['semester_type'];
+    course_type: Course['course_type'];
+    credits: number;
+    coefficient: number;
+    hours_lecture: number;
+    hours_tutorial: number;
+    hours_practical: number;
+    description: string;
+    is_active: boolean;
+}
+
 export const academicsService = {
     getCourses: async (params?: any) => {
         const response = await api.get<PaginatedResponse<Course>>('/academics/courses/', { params });
@@ -12,12 +28,12 @@ export const academicsService = {
         return response.data;
     },
 
-    createCourse: async (data: Partial<Course>) => {
+    createCourse: async (data: CourseMutationPayload) => {
         const response = await api.post<Course>('/academics/courses/', data);
         return response.data;
     },
 
-    updateCourse: async (id: number, data: Partial<Course>) => {
+    updateCourse: async (id: number, data: Partial<CourseMutationPayload>) => {
         const response = await api.patch<Course>(`/academics/courses/${id}/`, data);
         return response.data;
     },

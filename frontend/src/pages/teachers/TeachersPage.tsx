@@ -1,5 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  AcademicCapIcon,
+  EnvelopeIcon,
+  EyeIcon,
+  IdentificationIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  PencilSquareIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
+import { useAuth } from '../../context/AuthContext';
+import {
+  EntityAvatar,
+  IconActionButton,
+  ListLoading,
+  PaginationBar,
+  StatusPill,
+} from '../../components/common/EntityDisplay';
+import PageHeader from '../../components/common/PageHeader';
 import api from '../../services/api';
 import { Teacher, PaginatedResponse } from '../../types';
 import TeacherFormModal from './TeacherFormModal';
@@ -22,8 +41,22 @@ interface TeacherSchedule {
   end_time: string;
 }
 
+const getTeacherFullName = (teacher: Teacher): string => {
+  const composedName = [teacher.first_name, teacher.last_name]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  return teacher.user_full_name || teacher.user_name || composedName || teacher.employee_id;
+};
+
+const getTeacherInitial = (teacher: Teacher): string =>
+  getTeacherFullName(teacher).charAt(0).toUpperCase() || 'E';
+
 const TeachersPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { user: currentUser } = useAuth();
+  const canManageUsers = ['ADMIN', 'DEAN', 'SECRETARY'].includes(currentUser?.role || '');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,13 +98,15 @@ const TeachersPage: React.FC = () => {
   const fetchTeacherDetails = async (teacher: Teacher) => {
     setDetailLoading(true);
     try {
-      // Fetch courses
-      const coursesRes = await api.get(`/teachers/teachers/${teacher.id}/courses/`);
-      setTeacherCourses(coursesRes.data.by_semester || {});
+      const [teacherRes, coursesRes, scheduleRes] = await Promise.all([
+        api.get<Teacher>(`/teachers/teachers/${teacher.id}/`),
+        api.get(`/teachers/teachers/${teacher.id}/courses/`).catch(() => null),
+        api.get(`/teachers/teachers/${teacher.id}/schedules/`).catch(() => null),
+      ]);
 
-      // Fetch schedule
-      const scheduleRes = await api.get(`/teachers/teachers/${teacher.id}/schedules/`);
-      setTeacherSchedule(scheduleRes.data.schedule_by_day || {});
+      setSelectedTeacher(teacherRes.data);
+      setTeacherCourses(coursesRes?.data?.by_semester || {});
+      setTeacherSchedule(scheduleRes?.data?.schedule_by_day || {});
     } catch (error) {
       console.error('Error fetching teacher details:', error);
     } finally {
@@ -86,70 +121,55 @@ const TeachersPage: React.FC = () => {
     fetchTeacherDetails(teacher);
   };
 
-  const getRankBadge = (rank: string) => {
-    const colors: Record<string, { bg: string; text: string; border: string }> = {
-      ASSISTANT: { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
-      LECTURER: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-      SENIOR_LECTURER: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-      ASSOCIATE_PROFESSOR: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-      PROFESSOR: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-    };
-    return colors[rank] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
-  };
-
-  const getRankIcon = (rank: string) => {
-    const icons: Record<string, string> = {
-      ASSISTANT: '👨‍🏫',
-      LECTURER: '📚',
-      SENIOR_LECTURER: '🎓',
-      ASSOCIATE_PROFESSOR: '📖',
-      PROFESSOR: '🏆',
-    };
-    return icons[rank] || '👤';
-  };
+  const getRankTone = (rank: string): 'slate' | 'blue' | 'green' | 'earth' | 'orange' => ({
+    ASSISTANT: 'slate',
+    LECTURER: 'blue',
+    SENIOR_LECTURER: 'green',
+    ASSOCIATE_PROFESSOR: 'earth',
+    PROFESSOR: 'orange',
+  }[rank] as 'slate' | 'blue' | 'green' | 'earth' | 'orange') || 'slate';
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-500 rounded-2xl p-6 mb-6 shadow-lg">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-white">{t('teachers.title', 'Gestion des Enseignants')}</h1>
-            <p className="text-teal-100 mt-1">{t('teachers.subtitle', 'Gérer le corps professoral et leurs affectations')}</p>
-          </div>
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow={t('sidebar.academics', 'Corps académique')}
+        title={t('teachers.title', 'Gestion des Enseignants')}
+        description={t('teachers.subtitle', 'Gérer le corps professoral et leurs affectations')}
+        icon={<AcademicCapIcon className="h-6 w-6" />}
+        actions={canManageUsers && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-white text-teal-600 px-5 py-2.5 rounded-xl font-semibold hover:bg-teal-50 transition-all shadow-md flex items-center gap-2"
+            className="brand-button"
           >
-            <svg className="w-5 h-5 rtl:mirror" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
+            <PlusIcon className="h-5 w-5" />
             {t('teachers.actions.new_teacher', 'Nouvel Enseignant')}
           </button>
-        </div>
-      </div>
+        )}
+      />
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <svg className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+      <div className="surface-panel p-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative min-w-0 flex-1">
+              <MagnifyingGlassIcon className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input
-                type="text"
+                type="search"
                 placeholder={t('teachers.search_placeholder', 'Rechercher un enseignant...')}
-                className="w-full pl-10 pr-4 rtl:pr-10 rtl:pl-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="brand-input ps-12"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setCurrentPage(1);
+                }}
               />
-            </div>
           </div>
           <select
             value={rankFilter}
-            onChange={(e) => setRankFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            onChange={(event) => {
+              setRankFilter(event.target.value);
+              setCurrentPage(1);
+            }}
+            className="brand-input w-full sm:w-72"
           >
             <option value="">{t('teachers.filters.all_ranks', 'Tous les grades')}</option>
             <option value="ASSISTANT">{t('teachers.filters.assistant', 'Assistant')}</option>
@@ -163,92 +183,91 @@ const TeachersPage: React.FC = () => {
 
       {/* Teachers Grid */}
       {loading ? (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-500 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-gray-500">Chargement des enseignants...</p>
-        </div>
+        <div className="surface-panel overflow-hidden"><ListLoading cards /></div>
       ) : teachers.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <svg className="w-16 h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="surface-panel p-12 text-center">
+          <svg className="mx-auto h-16 w-16 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <p className="mt-4 text-gray-500">{t('teachers.empty', 'Aucun enseignant trouvé')}</p>
+          <p className="mt-4 text-lg font-black text-slate-900">{t('teachers.empty', 'Aucun enseignant trouvé')}</p>
+          <p className="mt-2 text-sm text-slate-500">{t('teachers.empty_description', 'Modifiez les filtres ou créez un nouveau profil enseignant.')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {teachers.map((teacher) => {
-            const rankStyle = getRankBadge(teacher.rank);
+            const fullName = getTeacherFullName(teacher);
             return (
-              <div
+              <article
                 key={teacher.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all cursor-pointer group"
-                onClick={() => handleViewTeacher(teacher)}
+                className="surface-panel group flex min-h-[280px] flex-col overflow-hidden p-5 transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-soft"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-md group-hover:scale-105 transition-transform">
-                    {teacher.user_full_name?.charAt(0) || 'E'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">{teacher.user_full_name}</h3>
-                    <p className="text-sm text-gray-500 truncate">{teacher.user_email}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium border ${rankStyle.bg} ${rankStyle.text} ${rankStyle.border}`}>
-                        <span>{getRankIcon(teacher.rank)}</span>
-                        {teacher.rank_display}
-                      </span>
+                  <EntityAvatar name={fullName} src={teacher.user_profile_picture} tone="green" size="lg" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-lg font-black text-slate-950">{fullName}</h3>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs font-bold text-blue-700">
+                          <IdentificationIcon className="h-4 w-4" />
+                          {teacher.employee_id}
+                        </div>
+                      </div>
+                      <StatusPill tone={teacher.is_active ? 'green' : 'red'} dot>
+                        {teacher.is_active ? t('teachers.details.active', 'Actif') : t('teachers.details.inactive', 'Inactif')}
+                      </StatusPill>
                     </div>
+                    <div className="mt-3"><StatusPill tone={getRankTone(teacher.rank)}>{teacher.rank_display}</StatusPill></div>
                   </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-sm">
-                  <span className="text-gray-500">
-                    <span className="font-medium text-gray-700">{teacher.employee_id}</span>
-                  </span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${teacher.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {teacher.is_active ? t('teachers.details.active', 'Actif') : t('teachers.details.inactive', 'Inactif')}
-                  </span>
-                </div>
-                {teacher.department_name && (
-                  <div className="mt-2 text-sm text-gray-500">
-                    📍 {teacher.department_name}
+
+                <div className="mt-5 space-y-2.5 rounded-2xl bg-slate-50 p-4 text-sm">
+                  <div className="flex items-center gap-2.5 text-slate-600">
+                    <EnvelopeIcon className="h-4 w-4 shrink-0 text-blue-600" />
+                    <span className="truncate font-semibold">{teacher.user_email || teacher.user_phone || t('teachers.details.not_specified', 'Non spécifié')}</span>
                   </div>
-                )}
-              </div>
+                  <div className="flex items-center gap-2.5 text-slate-600">
+                    <MapPinIcon className="h-4 w-4 shrink-0 text-green-600" />
+                    <span className="truncate font-semibold">{teacher.department_name || t('teachers.details.not_specified', 'Département non spécifié')}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-2.5">
+                    <span className="text-xs font-semibold text-slate-400">{t('teachers.form.labels.contract_type', 'Contrat')}</span>
+                    <span className="truncate text-xs font-black text-brand-earth">{teacher.contract_type_display || teacher.contract_type}</span>
+                  </div>
+                </div>
+
+                <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
+                  <button type="button" onClick={() => handleViewTeacher(teacher)} className="text-sm font-black text-blue-700 transition hover:text-green-700">
+                    {t('common.view_details', 'Voir le profil')}
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <IconActionButton label={t('common.view', 'Voir')} tone="blue" onClick={() => handleViewTeacher(teacher)}>
+                      <EyeIcon className="h-5 w-5" />
+                    </IconActionButton>
+                    {canManageUsers && (
+                      <IconActionButton label={t('teachers.actions.edit', 'Modifier')} tone="slate" onClick={() => setEditingTeacher(teacher)}>
+                        <PencilSquareIcon className="h-5 w-5" />
+                      </IconActionButton>
+                    )}
+                  </div>
+                </div>
+              </article>
             );
           })}
         </div>
       )}
 
       {/* Pagination */}
-      <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
-        <span className="text-sm text-gray-500">
-          {t('common.showing', { current: teachers.length, total: totalCount, defaultValue: `Affichage de ${teachers.length} sur ${totalCount} enseignants` })}
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            {t('common.prev', 'Précédent')}
-          </button>
-          <span className="px-4 py-2 bg-teal-50 text-teal-700 rounded-lg text-sm font-medium">
-            {currentPage}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => p + 1)}
-            disabled={teachers.length < 20}
-            className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors flex items-center gap-2"
-          >
-            {t('common.next', 'Suivant')}
-            <svg className="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+      {!loading && teachers.length > 0 && (
+        <div className="surface-panel overflow-hidden">
+          <PaginationBar
+            currentPage={currentPage}
+            currentCount={teachers.length}
+            total={totalCount}
+            onPrevious={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            onNext={() => setCurrentPage((page) => page + 1)}
+          />
         </div>
-      </div>
+      )}
 
       {/* Teacher Detail Modal */}
       {showModal && selectedTeacher && (
@@ -258,11 +277,17 @@ const TeachersPage: React.FC = () => {
             <div className="bg-gradient-to-r from-teal-600 to-emerald-500 p-6">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center text-white text-2xl font-bold">
-                    {selectedTeacher.user_full_name?.charAt(0) || 'E'}
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                    {selectedTeacher.user_profile_picture ? (
+                      <img
+                        src={selectedTeacher.user_profile_picture}
+                        alt={getTeacherFullName(selectedTeacher)}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : getTeacherInitial(selectedTeacher)}
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-white">{selectedTeacher.user_full_name}</h2>
+                    <h2 className="text-xl font-bold text-white">{getTeacherFullName(selectedTeacher)}</h2>
                     <p className="text-teal-100">{selectedTeacher.employee_id}</p>
                     <span className="inline-block mt-1 px-3 py-1 bg-white/20 rounded-full text-sm text-white">
                       {selectedTeacher.rank_display}
@@ -279,6 +304,7 @@ const TeachersPage: React.FC = () => {
                 </button>
               </div>
               {/* Edit Button */}
+              {canManageUsers && (
               <button
                 onClick={() => {
                   setShowModal(false);
@@ -291,6 +317,7 @@ const TeachersPage: React.FC = () => {
                 </svg>
                 {t('teachers.actions.edit', 'Modifier')}
               </button>
+              )}
             </div>
 
             {/* Tabs */}
@@ -322,30 +349,72 @@ const TeachersPage: React.FC = () => {
               ) : (
                 <>
                   {activeTab === 'info' && (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 bg-gray-50 rounded-xl">
+                        <p className="text-sm text-gray-500">{t('teachers.form.labels.last_name', 'Nom')}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.last_name || t('teachers.details.not_specified', 'Non spécifié')}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-xl">
+                        <p className="text-sm text-gray-500">{t('teachers.form.labels.first_name', 'Prénom')}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.first_name || t('teachers.details.not_specified', 'Non spécifié')}</p>
+                      </div>
                       <div className="p-4 bg-gray-50 rounded-xl">
                         <p className="text-sm text-gray-500">{t('teachers.details.email', 'Email')}</p>
-                        <p className="font-medium text-gray-900">{selectedTeacher.user_email}</p>
+                        <p className="font-medium text-gray-900 break-words">{selectedTeacher.user_email || t('teachers.details.not_specified', 'Non spécifié')}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-xl">
+                        <p className="text-sm text-gray-500">{t('teachers.form.labels.phone', 'Téléphone')}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.user_phone || t('teachers.details.not_specified', 'Non spécifié')}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-xl">
+                        <p className="text-sm text-gray-500">{t('teachers.form.labels.date_of_birth', 'Date de naissance')}</p>
+                        <p className="font-medium text-gray-900">
+                          {selectedTeacher.user_date_of_birth
+                            ? new Date(selectedTeacher.user_date_of_birth).toLocaleDateString(i18n.language)
+                            : t('teachers.details.not_specified', 'Non spécifiée')}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-xl">
+                        <p className="text-sm text-gray-500">{t('teachers.form.labels.gender', 'Sexe')}</p>
+                        <p className="font-medium text-gray-900">
+                          {selectedTeacher.user_gender === 'F'
+                            ? t('teachers.form.options.female', 'Femme')
+                            : selectedTeacher.user_gender === 'M'
+                              ? t('teachers.form.options.male', 'Homme')
+                              : t('teachers.details.not_specified', 'Non spécifié')}
+                        </p>
                       </div>
                       <div className="p-4 bg-gray-50 rounded-xl">
                         <p className="text-sm text-gray-500">{t('teachers.details.department', 'Département')}</p>
-                        <p className="font-medium text-gray-900">{selectedTeacher.department_name || 'Non assigné'}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.department_name || t('teachers.details.not_assigned', 'Non assigné')}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-xl">
+                        <p className="text-sm text-gray-500">{t('teachers.details.faculty', 'Faculté')}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.faculty_name || t('teachers.details.not_assigned', 'Non assignée')}</p>
                       </div>
                       <div className="p-4 bg-gray-50 rounded-xl">
                         <p className="text-sm text-gray-500">{t('teachers.details.specialization', 'Spécialisation')}</p>
-                        <p className="font-medium text-gray-900">{selectedTeacher.specialization || 'Non spécifiée'}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.specialization || t('teachers.details.not_specified', 'Non spécifiée')}</p>
                       </div>
                       <div className="p-4 bg-gray-50 rounded-xl">
                         <p className="text-sm text-gray-500">{t('teachers.details.contract_type', 'Type de contrat')}</p>
-                        <p className="font-medium text-gray-900">{selectedTeacher.contract_type_display || 'Non spécifié'}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.contract_type_display || t('teachers.details.not_specified', 'Non spécifié')}</p>
                       </div>
                       <div className="p-4 bg-gray-50 rounded-xl">
                         <p className="text-sm text-gray-500">{t('teachers.details.hire_date', "Date d'embauche")}</p>
                         <p className="font-medium text-gray-900">
                           {selectedTeacher.hire_date
                             ? new Date(selectedTeacher.hire_date).toLocaleDateString(i18n.language)
-                            : 'Non spécifiée'}
+                            : t('teachers.details.not_specified', 'Non spécifiée')}
                         </p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-xl">
+                        <p className="text-sm text-gray-500">{t('teachers.form.labels.office', 'Bureau')}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.office_location || t('teachers.details.not_specified', 'Non spécifié')}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-xl md:col-span-2">
+                        <p className="text-sm text-gray-500">{t('teachers.form.labels.address', 'Adresse')}</p>
+                        <p className="font-medium text-gray-900">{selectedTeacher.user_address || t('teachers.details.not_specified', 'Non spécifiée')}</p>
                       </div>
                       <div className="p-4 bg-gray-50 rounded-xl">
                         <p className="text-sm text-gray-500">{t('teachers.details.status', 'Statut')}</p>
@@ -360,7 +429,7 @@ const TeachersPage: React.FC = () => {
                     <div className="space-y-4">
                       {Object.keys(teacherCourses).length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
-                          Aucun cours assigné
+                          {t('teachers.details.empty_courses', 'Aucun cours assigné')}
                         </div>
                       ) : (
                         Object.entries(teacherCourses).map(([semester, courses]) => (
@@ -375,7 +444,7 @@ const TeachersPage: React.FC = () => {
                                   </div>
                                   <div className="text-right">
                                     <span className={`px-2 py-1 rounded text-xs ${course.is_primary ? 'bg-teal-100 text-teal-700' : 'bg-gray-200 text-gray-600'}`}>
-                                      {course.is_primary ? 'Principal' : 'Secondaire'}
+                                      {course.is_primary ? t('teachers.details.primary', 'Principal') : t('teachers.details.secondary', 'Secondaire')}
                                     </span>
                                     <p className="text-sm text-gray-500 mt-1">{course.hours_assigned}h</p>
                                   </div>
@@ -392,7 +461,7 @@ const TeachersPage: React.FC = () => {
                     <div className="space-y-4">
                       {Object.keys(teacherSchedule).length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
-                          Aucun emploi du temps disponible
+                          {t('teachers.details.empty_schedule', 'Aucun emploi du temps disponible')}
                         </div>
                       ) : (
                         Object.entries(teacherSchedule).map(([day, schedules]) => (

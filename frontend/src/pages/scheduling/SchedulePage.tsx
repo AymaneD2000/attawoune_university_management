@@ -4,13 +4,11 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import {
   Schedule,
-  TimeSlot,
   Course,
   Teacher,
   Classroom,
   Semester,
-  Program,
-  PaginatedResponse
+  Program
 } from '../../types';
 import universityService from '../../services/universityService';
 import teacherService from '../../services/teacherService';
