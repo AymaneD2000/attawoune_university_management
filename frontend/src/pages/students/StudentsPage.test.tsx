@@ -299,6 +299,13 @@ describe('StudentsPage migrated list', () => {
     expect(arSummary.error_description).toBe(
       'المؤشرات غير متاحة. تظل قائمة الطلاب متاحة.',
     );
+
+    expect(frTranslation.students.actions.correct_year).toBe("Corriger l'année académique");
+    expect(arTranslation.students.actions.correct_year).toBe('تصحيح السنة الأكاديمية');
+    expect(frTranslation.students.year_correction.summary_partial).toContain('{{count}}');
+    expect(arTranslation.students.year_correction.summary_partial).toContain('{{count}}');
+    expect(frTranslation.students.year_correction.warning).toContain("l'année cible");
+    expect(arTranslation.students.year_correction.warning).toContain('السنة الهدف');
   });
 
   test('renders summary metrics, both responsive renderers, labelled selection, and uses URL/query/scroll state', async () => {

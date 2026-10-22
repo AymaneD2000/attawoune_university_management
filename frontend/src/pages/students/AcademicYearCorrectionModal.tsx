@@ -272,7 +272,7 @@ const AcademicYearCorrectionModal: React.FC<AcademicYearCorrectionModalProps> = 
           </div>
 
           <p className="rounded-[var(--radius-control)] border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">
-            {t('students.year_correction.warning', "Cette opération régénère les matricules et le solde financier de l'année source. Les étudiants avec des paiements, des notes, des présences, des dettes ou des délibérations dans l'année source seront bloqués pour revue manuelle.")}
+            {t('students.year_correction.warning', "Cette opération régénère les matricules, supprime le solde vide de l'année source et crée le solde de l'année cible. Les étudiants avec des paiements, des notes, des présences, des dettes ou des délibérations dans l'année source seront bloqués pour revue manuelle.")}
           </p>
 
           {(validationError || apiError) && (

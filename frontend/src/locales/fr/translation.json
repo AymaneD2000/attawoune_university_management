@@ -127,7 +127,8 @@
       "id_card": "Carte d'étudiant",
       "download_cards": "Télécharger les cartes",
       "new_student": "Nouvel Étudiant",
-      "reinscription": "Ré-inscription"
+      "reinscription": "Ré-inscription",
+      "correct_year": "Corriger l'année académique"
     },
     "reinscription": {
       "title": "Ré-inscription (année précédente)",
@@ -145,6 +146,28 @@
       "level_hint": "L'inscription crée automatiquement le relevé financier de l'année en cours avec les frais du programme.",
       "success": "Étudiant inscrit pour l'année en cours.",
       "error_default": "Erreur lors de la ré-inscription."
+    },
+    "year_correction": {
+      "title": "Corriger l'année académique",
+      "description": "Transfère des étudiants nouvellement créés vers la bonne année académique.",
+      "select_source": "Sélectionnez l'année source.",
+      "select_target": "Sélectionnez l'année cible.",
+      "years_differ": "L'année cible doit être différente de l'année source.",
+      "select_date": "Renseignez la date d'inscription corrigée.",
+      "error_default": "Erreur lors de la correction de l'année académique.",
+      "select_year": "Sélectionner une année",
+      "complete": "Terminer",
+      "confirm": "Corriger l'année académique",
+      "loading_years": "Chargement des années académiques...",
+      "summary_complete": "Tous les étudiants sélectionnés ont été transférés.",
+      "summary_partial": "{{count}} étudiant(s) bloqué(s) pour revue manuelle.",
+      "transferred": "Étudiants transférés",
+      "blocked": "Étudiants bloqués",
+      "selected_count": "{{count}} étudiant(s) sélectionné(s)",
+      "source_year": "Année source",
+      "target_year": "Année cible",
+      "corrected_date": "Date d'inscription corrigée",
+      "warning": "Cette opération régénère les matricules, supprime le solde vide de l'année source et crée le solde de l'année cible. Les étudiants avec des paiements, des notes, des présences, des dettes ou des délibérations dans l'année source seront bloqués pour revue manuelle."
     },
     "summary": {
       "label": "Résumé des étudiants",
