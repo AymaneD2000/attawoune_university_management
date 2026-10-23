@@ -51,7 +51,7 @@ describe('ReinscriptionModal enrollment date filter', () => {
   test('renders an enrollment date filter input', async () => {
     renderModal();
 
-    const input = await screen.findByLabelText(/Date d'inscription/);
+    const input = await screen.findByLabelText(/Date d'ajout/);
     expect(input.getAttribute('type')).toBe('date');
   });
 
@@ -66,7 +66,7 @@ describe('ReinscriptionModal enrollment date filter', () => {
   test('requests candidates with the selected enrollment date', async () => {
     renderModal();
 
-    fireEvent.change(screen.getByLabelText(/Date d'inscription/), {
+    fireEvent.change(screen.getByLabelText(/Date d'ajout/), {
       target: { value: '2026-10-13' },
     });
 

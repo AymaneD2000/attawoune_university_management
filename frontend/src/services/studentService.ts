@@ -203,15 +203,17 @@ export const studentService = {
         return response.data;
     },
 
-    // Re-inscription: previous-year students eligible for the active year
+    // Re-inscription: previous-year students eligible for the active year.
+    // `createdDate` filters by the account creation date ("Créé le"), i.e. the
+    // day the student was added to the system.
     getReinscriptionCandidates: async (
         search?: string,
-        enrollmentDate?: string,
+        createdDate?: string,
         signal?: AbortSignal
     ): Promise<ReinscriptionCandidate[]> => {
         const params: Record<string, string> = {};
         if (search) params.search = search;
-        if (enrollmentDate) params.enrollment_date = enrollmentDate;
+        if (createdDate) params.created_date = createdDate;
         const response = await api.get<ReinscriptionCandidate[]>('/students/reinscription-candidates/', {
             params: Object.keys(params).length > 0 ? params : undefined,
             signal,

@@ -22,7 +22,7 @@ const ReinscriptionModal: React.FC<ReinscriptionModalProps> = ({ open, onClose, 
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [enrollmentDate, setEnrollmentDate] = useState('');
+  const [createdDate, setCreatedDate] = useState('');
   const [selected, setSelected] = useState<ReinscriptionCandidate | null>(null);
   const [levelId, setLevelId] = useState<number | ''>('');
   const [busy, setBusy] = useState(false);
@@ -39,7 +39,7 @@ const ReinscriptionModal: React.FC<ReinscriptionModalProps> = ({ open, onClose, 
     if (open) {
       setSearch('');
       setDebouncedSearch('');
-      setEnrollmentDate('');
+      setCreatedDate('');
       setSelected(null);
       setLevelId('');
       setError(null);
@@ -47,11 +47,11 @@ const ReinscriptionModal: React.FC<ReinscriptionModalProps> = ({ open, onClose, 
   }, [open]);
 
   const candidatesQuery = useQuery({
-    queryKey: ['students', 'reinscription-candidates', debouncedSearch, enrollmentDate],
+    queryKey: ['students', 'reinscription-candidates', debouncedSearch, createdDate],
     queryFn: ({ signal }) =>
       studentService.getReinscriptionCandidates(
         debouncedSearch || undefined,
-        enrollmentDate || undefined,
+        createdDate || undefined,
         signal,
       ),
     enabled: open,
@@ -197,18 +197,18 @@ const ReinscriptionModal: React.FC<ReinscriptionModalProps> = ({ open, onClose, 
           </div>
 
           <div>
-            <label htmlFor="reinscription-enrollment-date" className="mb-1.5 block text-sm font-bold text-ui-foreground">
-              {t('students.reinscription.enrollment_date_label', "Date d'inscription")}
+            <label htmlFor="reinscription-created-date" className="mb-1.5 block text-sm font-bold text-ui-foreground">
+              {t('students.reinscription.created_date_label', "Date d'ajout")}
             </label>
             <input
-              id="reinscription-enrollment-date"
+              id="reinscription-created-date"
               type="date"
-              value={enrollmentDate}
-              onChange={(event) => setEnrollmentDate(event.target.value)}
+              value={createdDate}
+              onChange={(event) => setCreatedDate(event.target.value)}
               className="w-full rounded-[var(--radius-control)] border border-ui-border bg-ui-surface px-3.5 py-2.5 text-sm font-medium"
             />
             <p className="mt-2 text-xs leading-5 text-ui-muted">
-              {t('students.reinscription.enrollment_date_hint', 'Laisser vide pour afficher tous les candidats éligibles.')}
+              {t('students.reinscription.created_date_hint', 'Correspond à la date de création du compte (« Créé le »). Laisser vide pour afficher tous les candidats éligibles.')}
             </p>
           </div>
 
