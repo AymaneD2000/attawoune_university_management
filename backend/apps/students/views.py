@@ -9,6 +9,7 @@ This module provides ViewSets for managing student-related data:
 
 from dataclasses import asdict
 import logging
+from datetime import date
 
 from rest_framework import viewsets, filters, status
 from rest_framework.permissions import IsAuthenticated
@@ -16,6 +17,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
+from apps.core.exceptions import APIError
 from apps.core.permissions import IsSecretaryOrAdmin, IsTeacherOrAdmin, IsAdminOrSecretary
 from .models import Student, Enrollment, Attendance
 from .serializers import (
@@ -260,6 +262,7 @@ class StudentViewSet(viewsets.ModelViewSet):
 
         Query parameters:
         - search: filter by student id or name
+        - enrollment_date: filter by the student's enrollment date (YYYY-MM-DD)
         """
         from django.db.models import Q
         from apps.university.models import AcademicYear
@@ -289,6 +292,14 @@ class StudentViewSet(viewsets.ModelViewSet):
                 | Q(user__first_name__icontains=search)
                 | Q(user__last_name__icontains=search)
             )
+
+        enrollment_date_value = request.query_params.get('enrollment_date', '').strip()
+        if enrollment_date_value:
+            try:
+                enrollment_date_filter = date.fromisoformat(enrollment_date_value)
+            except ValueError:
+                raise APIError(message="Date d'inscription invalide.")
+            candidates = candidates.filter(enrollment_date=enrollment_date_filter)
 
         results = []
         for student in candidates[:50]:
