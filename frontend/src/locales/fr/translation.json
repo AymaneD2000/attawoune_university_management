@@ -134,6 +134,8 @@
       "title": "Ré-inscription (année précédente)",
       "description": "Choisissez un étudiant de l'année précédente pour l'inscrire dans l'année académique en cours. C'est le seul passage de données d'une année à l'autre.",
       "search_placeholder": "Rechercher un étudiant de l'année précédente (nom ou matricule)...",
+      "enrollment_date_label": "Date d'inscription",
+      "enrollment_date_hint": "Laisser vide pour afficher tous les candidats éligibles.",
       "loading": "Recherche...",
       "empty": "Aucun étudiant de l'année précédente n'est éligible à la ré-inscription.",
       "unknown_year": "Année inconnue",

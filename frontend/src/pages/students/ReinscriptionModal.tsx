@@ -22,6 +22,7 @@ const ReinscriptionModal: React.FC<ReinscriptionModalProps> = ({ open, onClose, 
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [enrollmentDate, setEnrollmentDate] = useState('');
   const [selected, setSelected] = useState<ReinscriptionCandidate | null>(null);
   const [levelId, setLevelId] = useState<number | ''>('');
   const [busy, setBusy] = useState(false);
@@ -38,6 +39,7 @@ const ReinscriptionModal: React.FC<ReinscriptionModalProps> = ({ open, onClose, 
     if (open) {
       setSearch('');
       setDebouncedSearch('');
+      setEnrollmentDate('');
       setSelected(null);
       setLevelId('');
       setError(null);
@@ -45,8 +47,13 @@ const ReinscriptionModal: React.FC<ReinscriptionModalProps> = ({ open, onClose, 
   }, [open]);
 
   const candidatesQuery = useQuery({
-    queryKey: ['students', 'reinscription-candidates', debouncedSearch],
-    queryFn: ({ signal }) => studentService.getReinscriptionCandidates(debouncedSearch || undefined, signal),
+    queryKey: ['students', 'reinscription-candidates', debouncedSearch, enrollmentDate],
+    queryFn: ({ signal }) =>
+      studentService.getReinscriptionCandidates(
+        debouncedSearch || undefined,
+        enrollmentDate || undefined,
+        signal,
+      ),
     enabled: open,
     staleTime: 30_000,
   });
@@ -187,6 +194,22 @@ const ReinscriptionModal: React.FC<ReinscriptionModalProps> = ({ open, onClose, 
               placeholder={t('students.reinscription.search_placeholder', "Rechercher un étudiant de l'année précédente (nom ou matricule)...")}
               className="w-full rounded-[var(--radius-control)] border border-ui-border bg-ui-surface py-2.5 ps-11 pe-4 text-sm"
             />
+          </div>
+
+          <div>
+            <label htmlFor="reinscription-enrollment-date" className="mb-1.5 block text-sm font-bold text-ui-foreground">
+              {t('students.reinscription.enrollment_date_label', "Date d'inscription")}
+            </label>
+            <input
+              id="reinscription-enrollment-date"
+              type="date"
+              value={enrollmentDate}
+              onChange={(event) => setEnrollmentDate(event.target.value)}
+              className="w-full rounded-[var(--radius-control)] border border-ui-border bg-ui-surface px-3.5 py-2.5 text-sm font-medium"
+            />
+            <p className="mt-2 text-xs leading-5 text-ui-muted">
+              {t('students.reinscription.enrollment_date_hint', 'Laisser vide pour afficher tous les candidats éligibles.')}
+            </p>
           </div>
 
           {candidatesQuery.isLoading ? (

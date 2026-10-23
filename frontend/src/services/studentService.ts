@@ -206,10 +206,14 @@ export const studentService = {
     // Re-inscription: previous-year students eligible for the active year
     getReinscriptionCandidates: async (
         search?: string,
+        enrollmentDate?: string,
         signal?: AbortSignal
     ): Promise<ReinscriptionCandidate[]> => {
+        const params: Record<string, string> = {};
+        if (search) params.search = search;
+        if (enrollmentDate) params.enrollment_date = enrollmentDate;
         const response = await api.get<ReinscriptionCandidate[]>('/students/reinscription-candidates/', {
-            params: search ? { search } : undefined,
+            params: Object.keys(params).length > 0 ? params : undefined,
             signal,
         });
         return response.data;
